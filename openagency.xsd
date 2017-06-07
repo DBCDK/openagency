@@ -192,6 +192,23 @@ You should have received a copy of the GNU Affero General Public License along w
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="domainListRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="oa:authentication" minOccurs="0"/>
+        <xs:element ref="oa:agencyId" minOccurs="0"  maxOccurs="1"/>
+        <xs:element ref="oa:domain" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="domainListResponse">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="oa:domainList" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="oa:error"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="libraryRulesRequest">
     <xs:complexType>
       <xs:sequence>
@@ -636,6 +653,13 @@ You should have received a copy of the GNU Affero General Public License along w
   </xs:complexType>
   <xs:element name="date" type="xs:string"/>
   <xs:element name="distanceInMeter" type="xs:integer"/>
+  <xs:element name="domainList" type="oa:domainList"/>
+  <xs:complexType name="domainList">
+    <xs:sequence>
+      <xs:element ref="oa:agencyId" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="oa:branchDomains" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:element name="dropOffAgency" type="xs:string"/>
   <xs:element name="dropOffBranch" type="xs:string"/>
   <xs:element name="dropOffName" type="xs:string"/>

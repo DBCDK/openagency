@@ -1881,7 +1881,7 @@ class openAgency extends webServiceServer {
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
         $agency = self::strip_agency($param->agencyId->_value);
-        if (empty($agency) && !empty($param->agencyId->_value)) {
+        if (!is_numeric($agency) && !empty($param->agencyId->_value)) {
           Object::set_value($res, 'error', 'agency_not_found');
         }
         else {
@@ -2404,6 +2404,64 @@ class openAgency extends webServiceServer {
     }
     //var_dump($res); var_dump($param); die();
     Object::set_value($ret, 'pickupAgencyListResponse', $res);
+    $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
+    if (empty($res->error)) $this->cache->set($cache_key, $ret);
+    $this->watch->stop('entry');
+    return $ret;
+  } 
+
+
+  /** \brief return a list of ip-adresses
+   * Request:
+   * - agencyId
+   * - domain 
+   */
+  public function domainList($param) {
+    if (!$this->aaa->has_right('netpunkt.dk', 500))
+      Object::set_value($res, 'error', 'authentication_error');
+    else {
+      $agency = self::strip_agency($param->agencyId->_value);
+      $cache_key = 'OA_IpL' . $this->config->get_inifile_hash() . $agency . $param->domain->_value;
+      self::set_cache_expire($this->cache_expire[__FUNCTION__]);
+      if ($ret = $this->cache->get($cache_key)) {
+        verbose::log(STAT, 'Cache hit');
+        return $ret;
+      }
+      $this->watch->start('entry');
+      $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
+      if (empty($res->error)) {
+        if ($param->domain->_value) {
+          $oci->bind('bind_domain', $param->domain->_value);
+          $and_query .= ' AND domain = :bind_domain';
+        }
+        if ($agency) {
+          $oci->bind('bind_bib_nr', $agency);
+          $and_query .= ' AND bib_nr = :bind_bib_nr';
+        }
+        $sql = 'SELECT unique bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL' . $and_query;
+        $this->watch->start('sql');
+        $oci->set_query($sql);
+        $this->watch->stop('sql');
+        $this->watch->start('fetch');
+        $ip_list = array();
+        while ($row = $oci->fetch_into_assoc()) {
+          $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
+        }
+        $this->watch->stop('fetch');
+        ksort($ip_list);
+        foreach ($ip_list as $bib => $ips) {
+          Object::set_value($ipList, 'agencyId', self::normalize_agency($bib));
+          natsort($ips);
+          foreach ($ips as $ip) {
+            Object::set_array_value($ipList->branchDomains->_value, 'domain', $ip);
+          }
+          Object::set_array_value($res, 'domainList', $ipList);
+          unset($ipList);
+        }
+      }
+    }
+    //var_dump($res); var_dump($param); die();
+    Object::set_value($ret, 'domainListResponse', $res);
     $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
     if (empty($res->error)) $this->cache->set($cache_key, $ret);
     $this->watch->stop('entry');
@@ -3078,7 +3136,8 @@ class openAgency extends webServiceServer {
    * @return (string) only digits, so something like DK-710100 returns 710100
    */
   private function strip_agency($id) {
-    return preg_replace('/\D/', '', $id);
+    $stripped = preg_replace('/\D/', '', $id);
+    return (is_numeric($stripped) || empty($id)) ? $stripped : $id;
   }
 
   /** \brief Removes NL(ascii 10) and CR (ascii 13)

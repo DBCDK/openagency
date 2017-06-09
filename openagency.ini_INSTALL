@@ -42,7 +42,7 @@ soapAction[findLibrary] = findLibraryRequest
 soapAction[getCulrProfile] = getCulrProfileRequest
 soapAction[getRegistryInfo] = getRegistryInfoRequest
 soapAction[getSaouLicenseInfo] = getSaouLicenseInfoRequest
-soapAction[ipList] = ipListRequest
+soapAction[domainList] = domainListRequest
 soapAction[libraryRules] = libraryRulesRequest
 soapAction[libraryTypeList] = libraryTypeListRequest
 soapAction[nameList] = nameListRequest
@@ -195,6 +195,15 @@ action[borrowerCheckList][] = callback
 action[borrowerCheckList][] = outputType
 action[borrowerCheckList][] = trackingId
 
+action[domainList][authentication][] = groupIdAut
+action[domainList][authentication][] = passwordAut
+action[domainList][authentication][] = userIdAut
+action[domainList][] = agencyId
+action[domainList][] = domain
+action[domainList][] = callback
+action[domainList][] = outputType
+action[domainList][] = trackingId
+
 action[encryption][authentication][] = groupIdAut
 action[encryption][authentication][] = passwordAut
 action[encryption][authentication][] = userIdAut
@@ -258,12 +267,6 @@ action[getSaouLicenseInfo][] = agencyId
 action[getSaouLicenseInfo][] = callback
 action[getSaouLicenseInfo][] = outputType
 action[getSaouLicenseInfo][] = trackingId
-
-action[ipList][authentication][] = groupIdAut
-action[ipList][authentication][] = passwordAut
-action[ipList][authentication][] = userIdAut
-action[ipList][] = agencyId
-action[ipList][] = domain
 
 action[libraryRules][authentication][] = groupIdAut
 action[libraryRules][authentication][] = passwordAut

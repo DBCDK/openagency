@@ -2429,10 +2429,13 @@ class openAgency extends webServiceServer {
       }
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
+      if (empty($res->error) && !empty($param->domain->_value) && !($last_dot = strrpos($param->domain->_value, '.'))) {
+        Object::set_value($res, 'error', 'error_in_request');
+      }
       if (empty($res->error)) {
         if ($param->domain->_value) {
-          $oci->bind('bind_domain', $param->domain->_value);
-          $and_query .= ' AND domain = :bind_domain';
+          $oci->bind('bind_domain', substr($param->domain->_value, 0, $last_dot + 1) . '%');
+          $and_query .= ' AND domain LIKE :bind_domain';
         }
         if ($agency) {
           $oci->bind('bind_bib_nr', $agency);
@@ -2452,11 +2455,15 @@ class openAgency extends webServiceServer {
         foreach ($ip_list as $bib => $ips) {
           Object::set_value($ipList, 'agencyId', self::normalize_agency($bib));
           natsort($ips);
-          foreach ($ips as $ip) {
-            Object::set_array_value($ipList->branchDomains->_value, 'domain', $ip);
+          foreach ($ips as $range) {
+            if (self::ip_in_cidr_range($param->domain->_value, $range)) {
+              Object::set_array_value($ipList->branchDomains->_value, 'domain', $range);
+            }
           }
-          Object::set_array_value($res, 'domainList', $ipList);
-          unset($ipList);
+          if ($ipList->branchDomains) {
+            Object::set_array_value($res, 'domainList', $ipList);
+            unset($ipList);
+          }
         }
       }
     }
@@ -2467,7 +2474,6 @@ class openAgency extends webServiceServer {
     $this->watch->stop('entry');
     return $ret;
   }
-
 
   /** \brief Fetch search profiles for the openSearch service
    *
@@ -3199,6 +3205,19 @@ class openAgency extends webServiceServer {
     if (!is_null($expire)) {
       $this->cache->set_expire((int) $expire);
     }
+  }
+
+  /** \brief Check if an ip is a cidr interval or identical if it is not an cidr interval
+   *
+   * @link https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing @endlink
+   *
+   * @param ip (string) the ip to check
+   * @param cidr (string) The cidr interval
+   */
+  private function ip_in_cidr_range($ip, $cidr) {
+    if (empty($ip) || ($ip == $cidr)) return TRUE;
+    list($subnet, $mask) = explode('/', $cidr);
+    return ((ip2long($ip) & ~((1 << (32 - $mask)) - 1) ) == ip2long($subnet));
   }
 
 }

@@ -35,6 +35,7 @@ wsdl = openagency.wsdl
 ; soapActions and their corresponding request structure
 ; Can be found in the wsdl but is stated here for convenience
 soapAction[automation] = automationRequest
+soapAction[bobTexts] = bobTextsRequest
 soapAction[borrowerCheckList] = borrowerCheckListRequest
 soapAction[encryption] = encryptionRequest
 soapAction[endUserOrderPolicy] = endUserOrderPolicyRequest
@@ -185,6 +186,14 @@ action[automation][] = materialType
 action[automation][] = callback
 action[automation][] = outputType
 action[automation][] = trackingId
+
+action[bobTexts][authentication][] = groupIdAut
+action[bobTexts][authentication][] = passwordAut
+action[bobTexts][authentication][] = userIdAut
+action[bobTexts][] = agencyId
+action[bobTexts][] = callback
+action[bobTexts][] = outputType
+action[bobTexts][] = trackingId
 
 action[borrowerCheckList][authentication][] = groupIdAut
 action[borrowerCheckList][authentication][] = passwordAut

@@ -2411,6 +2411,58 @@ class openAgency extends webServiceServer {
   } 
 
 
+  /** \brief return a list of texts for BOB
+   * Request:
+   * - agencyId
+   */
+  public function bobTexts($param) {
+    if (!$this->aaa->has_right('netpunkt.dk', 500))
+      Object::set_value($res, 'error', 'authentication_error');
+    else {
+      $agency = self::strip_agency($param->agencyId->_value);
+      $cache_key = 'OA_BT' . $this->config->get_inifile_hash() . $agency;
+      self::set_cache_expire($this->cache_expire[__FUNCTION__]);
+      if ($ret = $this->cache->get($cache_key)) {
+        verbose::log(STAT, 'Cache hit');
+        return $ret;
+      }
+      $this->watch->start('entry');
+      $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
+      if ($agency) {
+        $oci->bind('bind_bib_nr', $agency);
+        $where .= ' WHERE bib_nr = :bind_bib_nr';
+      }
+      $sql = 'SELECT bib_nr, head, text FROM vip_bob_stdsvar ' . $where . ' ORDER BY bib_nr, head';
+      $this->watch->start('sql');
+      $oci->set_query($sql);
+      $this->watch->stop('sql');
+      $this->watch->start('fetch');
+      $ip_list = array();
+      while ($row = $oci->fetch_into_assoc()) {
+        $texts[$row['BIB_NR']][] = $row;
+      }
+      $this->watch->stop('fetch');
+      foreach ($texts as $bib => $bib_texts) {
+        Object::set_value($bib_obj, 'agencyId', self::normalize_agency($bib));
+        foreach ($bib_texts as  $text) {
+          Object::set_value($txt_obj, 'label', $text['HEAD']);
+          Object::set_value($txt_obj, 'text', $text['TEXT']);
+          Object::set_array_value($bib_obj, 'texts', $txt_obj);
+          unset($txt_obj);
+        }
+        Object::set_array_value($res, 'bobTextsAgency', $bib_obj);
+        unset($bib_obj);
+      }
+    }
+    //var_dump($sql); var_dump($res); var_dump($param); die();
+    Object::set_value($ret, 'bobTextsResponse', $res);
+    $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
+    if (empty($res->error)) $this->cache->set($cache_key, $ret);
+    $this->watch->stop('entry');
+    return $ret;
+  }
+
+
   /** \brief return a list of ip-adresses
    * Request:
    * - agencyId

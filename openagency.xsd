@@ -36,6 +36,25 @@ You should have received a copy of the GNU Affero General Public License along w
       </xs:choice>
     </xs:complexType>
   </xs:element>
+  <xs:element name="bobTextsRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="oa:authentication" minOccurs="0"/>
+        <xs:element ref="oa:agencyId" minOccurs="0"/>
+        <xs:element ref="oa:callback" minOccurs="0"/>
+        <xs:element ref="oa:outputType" minOccurs="0"/>
+        <xs:element ref="oa:trackingId" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="bobTextsResponse">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="oa:bobTextsAgency" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="oa:error"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="borrowerCheckListRequest">
     <xs:complexType>
       <xs:sequence>
@@ -52,6 +71,26 @@ You should have received a copy of the GNU Affero General Public License along w
     <xs:complexType>
       <xs:choice>
         <xs:element ref="oa:borrowerCheckLibrary" minOccurs="0" maxOccurs="unbounded"/>
+        <xs:element ref="oa:error"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="domainListRequest">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="oa:authentication" minOccurs="0"/>
+        <xs:element ref="oa:agencyId" minOccurs="0"  maxOccurs="1"/>
+        <xs:element ref="oa:domain" minOccurs="0" maxOccurs="1"/>
+        <xs:element ref="oa:callback" minOccurs="0"/>
+        <xs:element ref="oa:outputType" minOccurs="0"/>
+        <xs:element ref="oa:trackingId" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="domainListResponse">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element ref="oa:domainList" minOccurs="0" maxOccurs="unbounded"/>
         <xs:element ref="oa:error"/>
       </xs:choice>
     </xs:complexType>
@@ -188,26 +227,6 @@ You should have received a copy of the GNU Affero General Public License along w
     <xs:complexType>
       <xs:choice>
         <xs:element ref="oa:saouLicenseInfo"/>
-        <xs:element ref="oa:error"/>
-      </xs:choice>
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="domainListRequest">
-    <xs:complexType>
-      <xs:sequence>
-        <xs:element ref="oa:authentication" minOccurs="0"/>
-        <xs:element ref="oa:agencyId" minOccurs="0"  maxOccurs="1"/>
-        <xs:element ref="oa:domain" minOccurs="0" maxOccurs="1"/>
-        <xs:element ref="oa:callback" minOccurs="0"/>
-        <xs:element ref="oa:outputType" minOccurs="0"/>
-        <xs:element ref="oa:trackingId" minOccurs="0"/>
-      </xs:sequence>
-    </xs:complexType>
-  </xs:element>
-  <xs:element name="domainListResponse">
-    <xs:complexType>
-      <xs:choice>
-        <xs:element ref="oa:domainList" minOccurs="0" maxOccurs="unbounded"/>
         <xs:element ref="oa:error"/>
       </xs:choice>
     </xs:complexType>
@@ -542,6 +561,22 @@ You should have received a copy of the GNU Affero General Public License along w
   <xs:element name="autRes" type="xs:string"/>
   <xs:element name="autService" type="oa:autServiceType"/>
   <xs:element name="base64" type="xs:string"/>
+  <xs:element name="label" type="xs:string"/>
+  <xs:element name="text" type="xs:string"/>
+  <xs:element name="texts" type="oa:texts"/>
+  <xs:complexType name="texts">
+    <xs:sequence>
+      <xs:element ref="oa:label"/>
+      <xs:element ref="oa:text"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="bobTextsAgency" type="oa:bobTextsAgency"/>
+  <xs:complexType name="bobTextsAgency">
+    <xs:sequence>
+      <xs:element ref="oa:agencyId"/>
+      <xs:element ref="oa:texts" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
   <xs:element name="bool" type="xs:boolean"/>
   <xs:element name="borrowerCheckLibrary" type="oa:borrowerCheckLibrary"/>
   <xs:complexType name="borrowerCheckLibrary">

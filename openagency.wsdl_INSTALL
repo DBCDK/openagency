@@ -19,11 +19,23 @@ You should have received a copy of the GNU Affero General Public License along w
   <wsdl:message name="automationResponse">
     <wsdl:part name="parameters" element="oa:automationResponse"/>
   </wsdl:message>
+  <wsdl:message name="bobTextsRequest">
+    <wsdl:part name="parameters" element="oa:bobTextsRequest"/>
+  </wsdl:message>
+  <wsdl:message name="bobTextsResponse">
+    <wsdl:part name="parameters" element="oa:bobTextsResponse"/>
+  </wsdl:message>
   <wsdl:message name="borrowerCheckListRequest">
     <wsdl:part name="parameters" element="oa:borrowerCheckListRequest"/>
   </wsdl:message>
   <wsdl:message name="borrowerCheckListResponse">
     <wsdl:part name="parameters" element="oa:borrowerCheckListResponse"/>
+  </wsdl:message>
+  <wsdl:message name="domainListRequest">
+    <wsdl:part name="parameters" element="oa:domainListRequest"/>
+  </wsdl:message>
+  <wsdl:message name="domainListResponse">
+    <wsdl:part name="parameters" element="oa:domainListResponse"/>
   </wsdl:message>
   <wsdl:message name="encryptionRequest">
     <wsdl:part name="parameters" element="oa:encryptionRequest"/>
@@ -60,12 +72,6 @@ You should have received a copy of the GNU Affero General Public License along w
   </wsdl:message>
   <wsdl:message name="getSaouLicenseInfoResponse">
     <wsdl:part name="parameters" element="oa:getSaouLicenseInfoResponse"/>
-  </wsdl:message>
-  <wsdl:message name="domainListRequest">
-    <wsdl:part name="parameters" element="oa:domainListRequest"/>
-  </wsdl:message>
-  <wsdl:message name="domainListResponse">
-    <wsdl:part name="parameters" element="oa:domainListResponse"/>
   </wsdl:message>
   <wsdl:message name="libraryRulesRequest">
     <wsdl:part name="parameters" element="oa:libraryRulesRequest"/>
@@ -132,9 +138,17 @@ You should have received a copy of the GNU Affero General Public License along w
       <wsdl:input message="oaw:automationRequest"/>
       <wsdl:output message="oaw:automationResponse"/>
     </wsdl:operation>
+    <wsdl:operation name="bobTexts">
+      <wsdl:input message="oaw:bobTextsRequest"/>
+      <wsdl:output message="oaw:bobTextsResponse"/>
+    </wsdl:operation>
     <wsdl:operation name="borrowerCheckList">
       <wsdl:input message="oaw:borrowerCheckListRequest"/>
       <wsdl:output message="oaw:borrowerCheckListResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="domainList">
+      <wsdl:input message="oaw:domainListRequest"/>
+      <wsdl:output message="oaw:domainListResponse"/>
     </wsdl:operation>
     <wsdl:operation name="encryption">
       <wsdl:input message="oaw:encryptionRequest"/>
@@ -159,10 +173,6 @@ You should have received a copy of the GNU Affero General Public License along w
     <wsdl:operation name="getSaouLicenseInfo">
       <wsdl:input message="oaw:getSaouLicenseInfoRequest"/>
       <wsdl:output message="oaw:getSaouLicenseInfoResponse"/>
-    </wsdl:operation>
-    <wsdl:operation name="domainList">
-      <wsdl:input message="oaw:domainListRequest"/>
-      <wsdl:output message="oaw:domainListResponse"/>
     </wsdl:operation>
     <wsdl:operation name="libraryRules">
       <wsdl:input message="oaw:libraryRulesRequest"/>
@@ -216,8 +226,26 @@ You should have received a copy of the GNU Affero General Public License along w
         <soap:body use="literal"/>
       </wsdl:output>
     </wsdl:operation>
+    <wsdl:operation name="bobTexts">
+      <soap:operation soapAction="http://oss.dbc.dk/ns/openAgency/BobTexts" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
     <wsdl:operation name="borrowerCheckList">
       <soap:operation soapAction="http://oss.dbc.dk/ns/openAgency/BorrowerCheckList" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="domainList">
+      <soap:operation soapAction="http://oss.dbc.dk/ns/openAgency/DomainList" style="document"/>
       <wsdl:input>
         <soap:body use="literal"/>
       </wsdl:input>
@@ -272,15 +300,6 @@ You should have received a copy of the GNU Affero General Public License along w
     </wsdl:operation>
     <wsdl:operation name="getSaouLicenseInfo">
       <soap:operation soapAction="http://oss.dbc.dk/ns/openAgency/GetSaouLicenseInfo" style="document"/>
-      <wsdl:input>
-        <soap:body use="literal"/>
-      </wsdl:input>
-      <wsdl:output>
-        <soap:body use="literal"/>
-      </wsdl:output>
-    </wsdl:operation>
-    <wsdl:operation name="domainList">
-      <soap:operation soapAction="http://oss.dbc.dk/ns/openAgency/DomainList" style="document"/>
       <wsdl:input>
         <soap:body use="literal"/>
       </wsdl:input>

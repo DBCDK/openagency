@@ -1,0 +1,7 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:open="http://oss.dbc.dk/ns/openagency">
+   <soapenv:Body>
+      <open:bobTextsRequest>
+         <open:agencyId>DK-710100</open:agencyId>
+      </open:bobTextsRequest>
+   </soapenv:Body>
+</soapenv:Envelope>

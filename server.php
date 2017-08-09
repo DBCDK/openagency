@@ -479,9 +479,10 @@ class openAgency extends webServiceServer {
       if (empty($res->error)) {
         try {
           $oci->bind('bind_agency', $agency);
+          $oci->bind('bind_deleted', 'deleted');
           $this->watch->start('sql1');
           $oci->set_query('SELECT * FROM vip_culr_profile 
-                            WHERE bib_nr = :bind_agency');
+                            WHERE bib_nr = :bind_agency AND typeofclient != :bind_deleted');
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           if ($cp_row = $oci->fetch_into_assoc()) {
@@ -520,6 +521,7 @@ class openAgency extends webServiceServer {
 
   /** \brief getRegistryInfo
    *
+   * Request:
    * Request:
    * - agencyId
    * - agencyName

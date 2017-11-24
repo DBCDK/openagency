@@ -2897,20 +2897,10 @@ class openAgency extends webServiceServer {
     $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
     if (empty($res->error)) {
       try {
-        $oci->bind('bind_agency', $agency);
-        $this->watch->start('sql1');
-        $oci->set_query('SELECT vilse 
-                           FROM vip, ' . $table_name . '
-                          WHERE (vip.kmd_nr = bibliotek OR vip.bib_nr = bibliotek)
-                            AND vip.bib_nr = :bind_agency
-                          ORDER BY prionr DESC');
-        $this->watch->stop('sql1');
-        $prio = array();
-        $this->watch->start('fetch');
-        while ($s_row = $oci->fetch_into_assoc()) {
-          Object::set_array_value($res, 'agencyId', $s_row['VILSE']);
+        $res = self::get_vilse($oci, $agency, $table_name, 'bib_nr');
+        if (empty($res->agencyId)) {
+          $res = self::get_vilse($oci, $agency, $table_name, 'kmd_nr');
         }
-        $this->watch->stop('fetch');
         if (empty($res->agencyId)) {
           Object::set_value($res, 'error', 'no_agencies_found');
         }
@@ -2921,6 +2911,31 @@ class openAgency extends webServiceServer {
         Object::set_value($res, 'error', 'service_unavailable');
       }
     }
+    return $res;
+  }
+
+  /** \brief get a priority list from some table
+   *
+   * @param ressource $oci
+   * @param string $agency 
+   * @param string $table_name - must contain columns: bibliotek, vilse and prionr
+   * @param string $column - the column to select from, kmd_nr or bib_nr
+   * @retval array - of agencies
+   */
+  private function get_vilse($oci, $agency, $table_name, $column) {
+    $oci->bind('bind_agency', $agency);
+    $this->watch->start('sql1');
+    $oci->set_query('SELECT vilse 
+                       FROM vip, ' . $table_name . '
+                      WHERE vip.' . $column . ' = bibliotek
+                        AND vip.bib_nr = :bind_agency
+                      ORDER BY prionr DESC');
+    $this->watch->stop('sql1');
+    $this->watch->start('fetch');
+    while ($s_row = $oci->fetch_into_assoc()) {
+      Object::set_array_value($res, 'agencyId', $s_row['VILSE']);
+    }
+    $this->watch->stop('fetch');
     return $res;
   }
 

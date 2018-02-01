@@ -1888,7 +1888,7 @@ class openAgency extends webServiceServer {
         }
         else {
           try {
-            $enum_map['cataloging_template_set'] = array(' ' => '', 'F' => 'fbs', 'L' => 'lokbib', 'P' => 'ph', 'D' => 'dbc', 'U' => 'ffu');
+            $enum_map['cataloging_template_set'] = array(' ' => '', 'F' => 'fbs', 'L' => 'lokbib', 'P' => 'ph', 'D' => 'dbc', 'U' => 'ffu', 'O' => 'fbslokal');
             if ($agency) {
               $oci->bind('bind_bib_nr', $agency);
               $and_bib = ' AND vip_library_rules.bib_nr = :bind_bib_nr';
@@ -3075,7 +3075,9 @@ class openAgency extends webServiceServer {
       Object::set_value($pickupAgency, 'librarydkSupportEmail', $row['SUPPORT_EMAIL'], FALSE);
       Object::set_value($pickupAgency, 'librarydkSupportPhone', $row['SUPPORT_TLF'], FALSE);
     }
-    Object::set_value($pickupAgency, 'agencySubdivision', $row['HOLDEPLADS'], FALSE);
+    if ($row['HOLDEPLADS']) {
+      Object::set_array_value($pickupAgency, 'agencySubdivision', $row['HOLDEPLADS']);
+    }
     if (empty($pickupAgency->openingHours) && ($row['AABN_TID'] || $row['AABN_TID_E'])) {
       self::array_append_value_and_language($pickupAgency->openingHours, $row['AABN_TID'], 'dan');
       self::array_append_value_and_language($pickupAgency->openingHours, $row['AABN_TID_E'], 'eng');

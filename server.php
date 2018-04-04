@@ -2597,8 +2597,8 @@ class openAgency extends webServiceServer {
               }
             }
             foreach ($profiler as $profil_no => $profil) {
+              $profile_name = '';
               foreach ($kilder as $kilde) {
-                $profile_name = '';
                 if (empty($kilde['ACCESS_FOR']) || strpos($kilde['ACCESS_FOR'], $agency) !== FALSE) {
                   $oci->bind('bind_kilde_id', $kilde['ID_NR']);
                   $oci->bind('bind_profil_id', $profil_no);

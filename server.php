@@ -65,7 +65,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_aut_' . $this->config->get_inifile_hash() . $agency . $param->autService->_value . $param->materialType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -86,7 +86,7 @@ class openAgency extends webServiceServer {
               $this->watch->stop('fetch');
             }
             catch (ociException $e) {
-              verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             $this->watch->stop('sql1');
@@ -113,7 +113,7 @@ class openAgency extends webServiceServer {
                 }
                 catch (ociException $e) {
                   $this->watch->stop('sql2');
-                  verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
               }
@@ -132,7 +132,7 @@ class openAgency extends webServiceServer {
                   $this->watch->stop('fetch');
                 }
                 catch (ociException $e) {
-                  verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
                 $this->watch->stop('sql3');
@@ -178,7 +178,7 @@ class openAgency extends webServiceServer {
             }
             catch (ociException $e) {
               $this->watch->stop('sql4');
-              verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -207,7 +207,7 @@ class openAgency extends webServiceServer {
             }
             catch (ociException $e) {
               $this->watch->stop('sql5');
-              verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -244,7 +244,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_bcl' . $this->config->get_inifile_hash() . $param->serviceRequester->_value . $param->borrowerCheckAllowed->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -283,7 +283,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -320,7 +320,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_enc_' . $this->config->get_inifile_hash() . $param->email->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -350,7 +350,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -386,7 +386,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_endUOP_' . $this->config->get_inifile_hash() . $agency . $param->orderMaterialType->_value . $param->ownedByAgency->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -430,7 +430,7 @@ class openAgency extends webServiceServer {
           }
           catch (ociException $e) {
             $this->watch->stop('sql1');
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -471,7 +471,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_getCP' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -506,7 +506,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -547,7 +547,7 @@ class openAgency extends webServiceServer {
                    $param->libraryStatus->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -681,7 +681,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -711,7 +711,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_getSLI' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -754,7 +754,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -791,7 +791,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_opeSC_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -866,7 +866,7 @@ class openAgency extends webServiceServer {
         catch (ociException $e) {
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -916,7 +916,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_ser_' . $this->config->get_inifile_hash() . $agency . $param->service->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -989,7 +989,7 @@ class openAgency extends webServiceServer {
               $this->watch->start('fetch3');
               $this->watch->stop('sql3');
               if (count($vv_row) <> count($consortia)) {
-                verbose::log(ERROR, 'OpenAgency('.__LINE__.'):: agency ' . $agency . 
+                VerboseJson::log(ERROR, 'OpenAgency('.__LINE__.'):: agency ' . $agency . 
                     ' has libraries in VIP_VIDERESTIL not found in LAANEVEJE');
               }
             }
@@ -1011,7 +1011,7 @@ class openAgency extends webServiceServer {
           }
         }
         catch (ociException $e) {
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
@@ -1022,7 +1022,7 @@ class openAgency extends webServiceServer {
           Object::set_value($res, 'error', 'agency_not_found');
         }
         if (empty($res->error)) {
-          //        verbose::log(TRACE, 'OpenAgency('.__LINE__.'):: action=service&agencyId=' . $param->agencyId->_value .  '&service=' . $param->service->_value);
+          //        VerboseJson::log(TRACE, 'OpenAgency('.__LINE__.'):: action=service&agencyId=' . $param->agencyId->_value .  '&service=' . $param->service->_value);
           switch ($param->service->_value) {
             case 'information':
               $inf = &$res->information->_value;
@@ -1649,7 +1649,7 @@ class openAgency extends webServiceServer {
         self::stringiefy($param->sort);
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -1847,7 +1847,7 @@ class openAgency extends webServiceServer {
       }
       catch (ociException $e) {
         $this->watch->stop('sql1');
-        verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
         Object::set_value($res, 'error', 'service_unavailable');
       } 
       $this->watch->stop('sql1');
@@ -1876,7 +1876,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_libRu_' . $this->config->get_inifile_hash() . $param->agencyId->_value . md5(json_encode($param->libraryRule)); 
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -1950,7 +1950,7 @@ class openAgency extends webServiceServer {
           }
           catch (ociException $e) {
             $this->watch->stop('sql1');
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             if ($oci->error['code'] == 904) {
               Object::set_value($res, 'error', 'error_in_request');
             } else {
@@ -1976,13 +1976,14 @@ class openAgency extends webServiceServer {
    * - error
    */
   public function libraryTypeList($param) {
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      //print_r($this->aaa->rights);
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
       $cache_key = 'OA_libTL_' . $this->config->get_inifile_hash() . $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2012,7 +2013,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -2042,7 +2043,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_namL_' . $this->config->get_inifile_hash() . $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2072,7 +2073,7 @@ class openAgency extends webServiceServer {
             }
           }
           catch (ociException $e) {
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -2176,7 +2177,7 @@ class openAgency extends webServiceServer {
         $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2396,7 +2397,7 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql1');
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2425,7 +2426,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_BT' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2478,7 +2479,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_IpL' . $this->config->get_inifile_hash() . $agency . $param->domain->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2556,7 +2557,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2642,7 +2643,7 @@ class openAgency extends webServiceServer {
             }
           }
           catch (ociException $e) {
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         } else {
@@ -2675,7 +2676,7 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
             $this->watch->stop('sql4');
-            verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2710,7 +2711,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_remA_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2774,7 +2775,7 @@ class openAgency extends webServiceServer {
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
-          verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -2805,7 +2806,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_reqO_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2837,7 +2838,7 @@ class openAgency extends webServiceServer {
       $cache_key = 'OA_shoO_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
-        verbose::log(STAT, 'Cache hit');
+        VerboseJson::log(STAT, 'Cache hit');
         return $ret;
       }
       $this->watch->start('entry');
@@ -2872,7 +2873,7 @@ class openAgency extends webServiceServer {
       $oci->connect();
     }
     catch (ociException $e) {
-      verbose::log(FATAL, 'OpenAgency('. $line .'):: OCI connect error: ' . $oci->get_error_string());
+      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: OCI connect error: ' . $oci->get_error_string());
       Object::set_value($error, 'error', 'service_unavailable');
     }
     $this->watch->stop('connect');
@@ -2908,7 +2909,7 @@ class openAgency extends webServiceServer {
       }
       catch (ociException $e) {
         $this->watch->stop('sql1');
-        verbose::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
         Object::set_value($res, 'error', 'service_unavailable');
       }
     }
@@ -3291,6 +3292,19 @@ class openAgency extends webServiceServer {
     list($subnet, $mask) = explode('/', $cidr);
     return ((ip2long($ip) & ~((1 << (32 - $mask)) - 1) ) == ip2long($subnet));
   }
+
+
+  protected function ja7DebugDebug($functionName, $timings ) {
+    $vtext = 'HEST';
+    $date_format = 'H:i:s-d/m/y';
+    $trackingId = "os:x<x";
+    $timings = str_replace(PHP_EOL, '', $timings );
+    if ($fp = @ fopen('php://stdout', 'a')) {
+      fwrite($fp, $vtext . ' ' . date($date_format) . ' ' . $trackingId. ' opensearch(' . $functionName .'):: '. $timings . PHP_EOL);
+      fclose($fp);
+    }
+  }
+
 
 }
 

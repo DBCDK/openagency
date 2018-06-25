@@ -25,11 +25,13 @@ wsdl = openagency.wsdl
 ; --------------
 ; in_house_domain may use ?ShowInfo and use create_sample form
 ;in_house_domain = .dbc.dk
+;in_house_ip_list = 172.16.0.0-172.20.255.255;192.168.0.0-192.168.255.255
+in_house_ip_list = 172.16.0.0-172.20.255.255
 
 ; --------------
 ; set to TRUE to expose the create_sample form
-;show_samples = 1
-; show_samples_ip_list = 127.0.0.1
+show_samples = 1
+;show_samples_ip_list = 127.0.0.1
 
 ; --------------
 ; soapActions and their corresponding request structure
@@ -59,7 +61,7 @@ soapAction[showOrder] = showOrderRequest
 
 ; --------------
 ; validate
-;validate[request] = openagency.xsd
+validate[request] = openagency.xsd
 ;validate[response] = openagency.xsd
 
 ; --------------
@@ -78,7 +80,7 @@ xmldir = ./xml
 
 ; --------------
 ; logfile for verbose output
-logfile = /tmp/openagency.log
+logfile = php://stdout
 
 ; set verboselevel
 ;   WARNING - simple warnings
@@ -90,13 +92,14 @@ logfile = /tmp/openagency.log
 ;   DEBUG   - debugging info
 ;   Z3959   - calls to z3950 services
 ;   OCI     - oracle
-verbose = WARNING+ERROR+FATAL+STAT+TIMER+TRACE+DEBUG+Z3950+OCI
+verbose = @VERBOSE_LEVEL@
 
 ; format for automatic timer dump %s is the operation used
 dump_timer = openAgency(%s)
 
 ; --------------
-agency_credentials = some_user/some_pwd@some.server.dbc.dk
+;agency_credentials = some_user/some_pwd@some.server.dbc.dk
+agency_credentials = @VIP_ORACLE_LOGIN@
 
 ; --------------
 ; table for automatic interlibrary loan setting of material owned by the library
@@ -114,14 +117,15 @@ profile_for_own_material[profil_2][limit_in_days] = 10
 ; --------------
 ; DBC target address for order-systems
 dbc_target[z3950][address] = z3950.dbc.dk:210/danbib
-dbc_target[iso18626][address] = http://oss-services.dbc.dk/copa-rs/app/iso18626/
-dbc_target[iso18626][password] = dbc_iso18626_password
+dbc_target[iso18626][address] = @COBA_RS_URL@
+dbc_target[iso18626][password] = @COBA_RS_PASSWD@
+
 
 ; --------------
 ; memcache - enabling this will cache result for 'cache_expire' seconds
-;cache_host = localhost
-;cache_port = 11211
-;cache_expire = 60
+cache_host = localhost
+cache_port = 11211
+cache_expire = 60
 ;
 ; each operation can be set to cache differently by setting cache_operation[operation] specifically
 ; like:
@@ -145,22 +149,36 @@ dbc_target[iso18626][password] = dbc_iso18626_password
 ; remoteAccess: 550:
 ; getCulrProfile: 551
 ; all other: 500
-aaa_ip_rights[dbc][ip_list] = 172.16.0.0-172.31.255.255;193.111.162.0-193.111.162.255
-aaa_ip_rights[dbc][ressource]['netpunkt.dk'] = 500,550,551
+aaa_ip_rights[dbc][ip_list] = 172.16.0.0-172.31.255.255;193.111.162.0-193.111.162.255;192.168.0.0-192.168.255.255
+aaa_ip_rights[dbc][ressource]['netpunkt.dk'] = 500,550,551,552
+aaa_ip_rights[konform][ip_list] = 91.209.190.0-91.209.190.255;212.60.118.50-212.60.118.62
+aaa_ip_rights[konform][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights[statsbiblioteket][ip_list] = 130.225.24.44;130.225.24.83
+aaa_ip_rights[statsbiblioteket][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights[LMInformationDelivery][ip_list] = 74.208.102.11
+aaa_ip_rights[LMInformationDelivery][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights[inlead][ip_list] = 52.29.166.250;178.168.59.134;178.168.80.187;217.26.165.99;46.137.118.67;46.137.126.132;46.51.174.76;46.51.182.186;46.51.183.5;46.51.183.77;54.228.180.162;54.246.84.109;54.246.96.64;77.233.245.14;79.125.6.101;80.199.116.190;89.28.117.221;90.184.193.155;91.203.63.22;91.203.63.22
+aaa_ip_rights[inlead][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights[filmstriben][ip_list] = 146.192.168.164-146.192.168.166
+aaa_ip_rights[filmstriben][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights[rlo][ip_list] = 91.100.19.120
+aaa_ip_rights[rlo][ressource]['netpunkt.dk'] = 500
+
 ;
 ; if not found in aaa_ip_rights the authentication object is created from the FORS
 ; either by using the WS specified by aaa_fors_rights or by OCI specified by aaa_credentials
 ;
 ; uri for a fors rights webservice - aaa_fors_rights have precedence over aaa_credentials
 ;aaa_fors_rights = http://forsrights.some.server/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
+aaa_fors_rights = @FORS_RIGHTS@
 ;
 ; oci credentials for FORS server
 ;aaa_credentials = ora_user/ora_passwd@some.server.dk
 ;
 ; memcache server for the authentication object - use localhost in one-webserver environment
-;aaa_cache_address = localhost:11211
+aaa_cache_address = localhost:11211
 ; number of seconds to cache authentication and access rights info
-;aaa_cache_seconds = 3600
+aaa_cache_seconds = 60
 ;
 
 ; ==============

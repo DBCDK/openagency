@@ -38,19 +38,28 @@ http://oss.dbc.dk/plone/services/open-agency
 Use Doxygen to get code documentation
 
 
-Installation
-------------
-The webservice requires [class_lib](svn://oss.dbc.dk/sync_php/php/OpenLibrary/class_lib) 
-to be installed in ./OLS_class_lib
+Build
+-----
 
-In the php.ini file:
-- make sure that always_populate_raw_post_data = On
+To fetch The Needed OLS_class_lib files run the build.sh script. this script also builds 
+the opensearch-webservice.tar.gz file needed for the docker build. 
 
-Copy openagency.ini_INSTALL to openagency.ini and edit it to reflect your setup
+```bash
+./build.sh
+(cd docker; docker build -t openagency:devel . )
+docker run -ti -p 8080:80 --env-file=boble.env openagency:devel
+```
 
-Copy openagency.wsdl_INSTALL to openagency.wsdl and modify
-the location of the service (at the end of the file)
+Development
+-----------
 
-Create a symbolic link from index.php to server.php or modify your webserver to default to server.php
+To start the docker with the php files just use 
+```bash
+./build.sh ; pushd docker ; docker build -t openagency:devel . ; popd ; docker run --rm --env-file test.env -ti -p 8080:80 -v {PWD}:/var/www/html/openagency --name=oa openagency:devel 
+```
 
-Consider copying robots.txt_INSTALL to robots.txt
+Or do a rebuild of the image  and make a clean start 
+```bash
+./build.sh ; pushd docker ; docker build -t openagency:devel . ; popd ; docker run --rm --env-file test.env -ti -p 8080:80 --name=oa openagency:devel
+```
+

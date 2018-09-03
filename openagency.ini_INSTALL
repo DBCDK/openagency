@@ -117,8 +117,8 @@ profile_for_own_material[profil_2][limit_in_days] = 10
 ; --------------
 ; DBC target address for order-systems
 dbc_target[z3950][address] = z3950.dbc.dk:210/danbib
-dbc_target[iso18626][address] = @COBA_RS_URL@
-dbc_target[iso18626][password] = @COBA_RS_PASSWD@
+dbc_target[iso18626][address] = @COPA_RS_URL@
+dbc_target[iso18626][password] = @COPA_RS_PASSWD@
 
 
 ; --------------

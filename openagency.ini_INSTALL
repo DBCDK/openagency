@@ -125,7 +125,7 @@ dbc_target[iso18626][password] = @COPA_RS_PASSWD@
 ; memcache - enabling this will cache result for 'cache_expire' seconds
 cache_host = localhost
 cache_port = 11211
-cache_expire = 60
+cache_expire = 86400
 ;
 ; each operation can be set to cache differently by setting cache_operation[operation] specifically
 ; like:
@@ -178,7 +178,7 @@ aaa_fors_rights = @FORS_RIGHTS@
 ; memcache server for the authentication object - use localhost in one-webserver environment
 aaa_cache_address = localhost:11211
 ; number of seconds to cache authentication and access rights info
-aaa_cache_seconds = 60
+aaa_cache_seconds = 86400
 ;
 
 ; ==============

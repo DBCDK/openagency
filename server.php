@@ -629,6 +629,9 @@ $this->log_to_file(__FUNCTION__);
           } elseif ($param->libraryStatus->_value == 'slettet') {
             $oci->bind('bind_s', 'S');
             $sqls[] = 'v.delete_mark = :bind_s';
+          } elseif ($param->libraryStatus->_value == 'aktive') {
+            $oci->bind('bind_u', 'U');
+            $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
           } elseif ($param->libraryStatus->_value <> 'alle') {
             $oci->bind('bind_u', 'U');
             $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
@@ -1787,6 +1790,9 @@ $this->log_to_file(__FUNCTION__);
         } elseif ($param->libraryStatus->_value == 'slettet') {
           $oci->bind('bind_s', 'S');
           $libraryStatus_sql = 'vip.delete_mark = :bind_s';
+        } elseif ($param->libraryStatus->_value == 'aktive') {
+          $oci->bind('bind_u', 'U');
+          $libraryStatus_sql = '(vip.delete_mark = :bind_u OR vip.delete_mark is NULL)';
         }
       }
       $sqls[] = $libraryStatus_sql;
@@ -2317,6 +2323,9 @@ $this->log_to_file(__FUNCTION__);
             } elseif ($param->libraryStatus->_value == 'slettet') {
               $oci->bind('bind_s', 'S');
               $filter_delete_vsn = 'v.delete_mark = :bind_s AND ';
+            } elseif ($param->libraryStatus->_value == 'aktive') {
+              $oci->bind('bind_u', 'U');
+              $filter_delete_vsn = '(v.delete_mark = :bind_u OR v.delete_mark is null) AND ';
             } else {
               $filter_delete_vsn = 'v.delete_mark is null AND ';
             }
@@ -2372,6 +2381,9 @@ $this->log_to_file(__FUNCTION__);
             } elseif ($param->libraryStatus->_value == 'slettet') {
               $oci->bind('bind_s', 'S');
               $filter_delete = ' AND v.delete_mark = :bind_s';
+            } elseif ($param->libraryStatus->_value == 'aktive') {
+              $oci->bind('bind_u', 'U');
+              $filter_delete = ' AND (v.delete_mark = :bind_u OR v.delete_mark is null)';
             } else {
               $filter_delete = ' AND v.delete_mark is null';
             }

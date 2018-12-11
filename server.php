@@ -2055,7 +2055,7 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function libraryTypeList($param) {
-// Postgres: doing
+// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500)) {
       //print_r($this->aaa->rights);
       Object::set_value($res, 'error', 'authentication_error');
@@ -2078,9 +2078,10 @@ $this->log_to_file(__FUNCTION__);
                               AND (v.delete_mark is null OR v.delete_mark = :bind_u)
                             ORDER BY bib_nr');
           $this->watch->stop('sql1');
-//$mem = memory_get_usage();
+          //$mem = memory_get_usage();
           $this->watch->start('fetch');
-          while ($row = $oci->fetch_into_assoc()) {
+          $rows = $oci->fetch_all_into_assoc();
+          foreach ($rows as $row) {
             Object::set_value($o, 'agencyId', self::normalize_agency($row['VSN_BIB_NR']));
             Object::set_value($o, 'agencyType', $row['BIB_TYPE']);
             Object::set_value($o, 'branchId', self::normalize_agency($row['BIB_NR']));
@@ -2089,7 +2090,7 @@ $this->log_to_file(__FUNCTION__);
             unset($o);
           }
           $this->watch->stop('fetch');
-//$this->watch->sums['mem'] = memory_get_usage() - $mem;
+          //$this->watch->sums['mem'] = memory_get_usage() - $mem;
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
@@ -2116,6 +2117,7 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function nameList($param) {
+// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2129,13 +2131,15 @@ $this->log_to_file(__FUNCTION__);
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
+        $filter_bib_type = NULL;
         if ($param->libraryType->_value == 'Alle' ||
             $param->libraryType->_value == 'Folkebibliotek' ||
             $param->libraryType->_value == 'Forskningsbibliotek' ||
             $param->libraryType->_value == 'Skolebibliotek' ||
-            $param->libraryType->_value == 'Other') {
+            $param->libraryType->_value == 'Other' ||
+            empty($param->libraryType->_value)) {
           try {
-            if ($param->libraryType->_value <> 'Alle') {
+            if (!empty($param->libraryType->_value) && $param->libraryType->_value <> 'Alle') {
               $filter_bib_type = 'AND vsn.bib_type = :bind_bib_type';
               $oci->bind('bind_bib_type', $param->libraryType->_value);
             }
@@ -2145,7 +2149,8 @@ $this->log_to_file(__FUNCTION__);
                                FROM vip v, vip_vsn vsn
                               WHERE v.bib_nr = vsn.bib_nr
                                 AND (v.delete_mark is null OR v.delete_mark = :bind_u) ' . $filter_bib_type);
-            while ($vv_row = $oci->fetch_into_assoc()) {
+            $vv_rows = $oci->fetch_all_into_assoc();
+            foreach ($vv_rows as $vv_row) {
               Object::set_value($o, 'agencyId', self::normalize_agency($vv_row['BIB_NR']));
               Object::set_value($o, 'agencyName', $vv_row['NAVN']);
               Object::set_array_value($res, 'agency', $o);
@@ -2216,6 +2221,8 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function pickupAgencyList($param) {
+// Postgres: done
+    $ora_par = array();
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2263,14 +2270,14 @@ $this->log_to_file(__FUNCTION__);
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
-        if (is_array($ora_par) ||
+        if (!empty($ora_par) ||
             $param->libraryType->_value == 'Alle' ||
             $param->libraryType->_value == 'Folkebibliotek' ||
             $param->libraryType->_value == 'Forskningsbibliotek' ||
             $param->libraryType->_value == 'Skolebibliotek' ||
             $param->libraryType->_value == 'Other') {
           try {
-            if ($ora_par) {
+            if (!empty($ora_par)) {
               foreach ($ora_par as $key => $val) {
                 $add_sql = '';
                 foreach ($val as $par) {
@@ -2298,7 +2305,7 @@ $this->log_to_file(__FUNCTION__);
                 if ($add_sql) $filter_bib_type[] = $add_sql . ")";
               }
             }
-            if ($ora_par['agencyId']) {
+            if (!empty($ora_par['agencyId'])) {
               foreach ($ora_par['agencyId'] as $agency) {
                 $agency_list .= ($agency_list ? ', ' : '') . ':bind_' . $agency;
                 $oci->bind('bind_' . $agency, $agency);
@@ -2332,32 +2339,35 @@ $this->log_to_file(__FUNCTION__);
             $sql = 'SELECT vsn.bib_nr, vsn.navn, vsn.bib_type, vsn.tlf_nr, vsn.email,
                            vsn.badr, vsn.bpostnr, vsn.bcity, vsn.url, vsn.sb_kopibestil,
                            vsn.cvr_nr, vsn.p_nr, vsn.ean_nummer
-                      FROM vip_vsn vsn, vip v, vip_sup vs
-                     WHERE ' . $filter_delete_vsn . ($filter_bib_type ? implode(' AND ', $filter_bib_type) . ' AND ' : '') . '
-                             v.bib_nr = vs.bib_nr (+)
+                      FROM vip_vsn vsn, vip v
+                      LEFT OUTER JOIN vip_sup vs
+                        ON vs.bib_nr = v.bib_nr
+                     WHERE ' . $filter_delete_vsn . ($filter_bib_type ? implode(' AND ', $filter_bib_type) : '') . '
                        AND v.kmd_nr = vsn.bib_nr
                      ORDER BY vsn.bib_nr';
             $this->watch->start('sql1');
             $oci->set_query($sql);
             $this->watch->stop('sql1');
             $this->watch->start('fetch1');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $bib_nr = &$row['BIB_NR'];
               $vsn[$bib_nr] = $row;
             }
             $this->watch->stop('fetch1');
 
-            $sql = 'SELECT unique bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL';
+            $sql = 'SELECT DISTINCT bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL';
             $this->watch->start('sql2');
             $oci->set_query($sql);
             $this->watch->stop('sql2');
             $this->watch->start('fetch2');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
             }
             $this->watch->stop('fetch2');
 
-            if ($ora_par['agencyId']) {
+            if (!empty($ora_par['agencyId'])) {
               foreach ($ora_par['agencyId'] as $agency) {
                 $oci->bind('bind_' . $agency, $agency);
               }
@@ -2373,23 +2383,30 @@ $this->log_to_file(__FUNCTION__);
               $oci->bind('bind_j', 'J');
               $filter_bib_type[] = 'vb.best_modt ' . (self::xs_boolean($param->pickupAllowed->_value) ? '=' : '!=') . ':bind_j';
             }
-            if ($param->libraryStatus->_value == 'alle') {
-              $filter_delete = '';
-            } elseif ($param->libraryStatus->_value == 'usynlig') {
-              $oci->bind('bind_u', 'U');
-              $filter_delete = ' AND v.delete_mark = :bind_u';
-            } elseif ($param->libraryStatus->_value == 'slettet') {
-              $oci->bind('bind_s', 'S');
-              $filter_delete = ' AND v.delete_mark = :bind_s';
-            } elseif ($param->libraryStatus->_value == 'aktive') {
-              $oci->bind('bind_u', 'U');
-              $filter_delete = ' AND (v.delete_mark = :bind_u OR v.delete_mark is null)';
-            } else {
-              $filter_delete = ' AND v.delete_mark is null';
-            }
-            if ($filter_delete) {
-              $oci->bind('bind_n', 'N');
-              $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+            switch ($param->libraryStatus->_value) {
+              case 'alle': 
+                $filter_delete = '';
+                break;
+              case 'usynlig': 
+                $oci->bind('bind_u', 'U');
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark = :bind_u';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+                break;
+              case 'slettet': 
+                $oci->bind('bind_s', 'S');
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark = :bind_s';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+                break;
+              case 'aktive': 
+                $oci->bind('bind_u', 'U');
+                $filter_delete = ' AND (v.delete_mark is null OR v.delete_mark = :bind_u)';
+                break;
+              default: 
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark is null';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
             }
             $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, v.leder, v.titel,
                           v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark, v.p_nr, v.uni_c_nr, 
@@ -2407,28 +2424,39 @@ $this->log_to_file(__FUNCTION__);
                           bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf,
                           kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user, kat.ncip_renew, 
                           kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn, kat.url_viderestil, kat.url_bib_kat
-                     FROM vip v, vip_vsn vsn, vip_beh vb, vip_danbib vd, vip_txt txt, vip_txt_eng eng, 
-                          vip_bogbus_holdeplads hold, vip_bestil bestil, vip_kat kat
-                    WHERE v.kmd_nr IN (SELECT UNIQUE vsn.bib_nr
-                                         FROM vip_vsn vsn, vip v, vip_sup vs
-                                        WHERE ' . $filter_delete_vsn . ' v.kmd_nr = vsn.bib_nr ' .
-                                              ($filter_bib_type ? ' AND ' . implode(' AND ', $filter_bib_type) : '') . ')
+                     FROM vip v
+                     LEFT OUTER JOIN vip_vsn vsn
+                       ON v.kmd_nr = vsn.bib_nr
+                     LEFT OUTER JOIN vip_danbib vd
+                       ON v.bib_nr = vd.bib_nr
+                     LEFT OUTER JOIN vip_beh vb
+                       ON v.bib_nr = vb.bib_nr
+                     LEFT OUTER JOIN vip_txt txt
+                       ON v.bib_nr = txt.bib_nr
+                     LEFT OUTER JOIN vip_bogbus_holdeplads hold
+                       ON v.bib_nr = hold.bib_nr
+                     LEFT OUTER JOIN vip_txt_eng eng
+                       ON v.bib_nr = eng.bib_nr
+                     LEFT OUTER JOIN vip_bestil bestil
+                       ON v.bib_nr = bestil.bib_nr
+                     LEFT OUTER JOIN vip_kat kat
+                       ON v.bib_nr = kat.bib_nr
+                     LEFT OUTER JOIN vip_sup sup
+                       ON v.bib_nr = sup.bib_nr 
+                    WHERE v.kmd_nr IN (
+                          SELECT DISTINCT vsn.bib_nr
+                            FROM vip_vsn vsn, vip v, vip_sup vs
+                           WHERE ' . $filter_delete_vsn . ' v.kmd_nr = vsn.bib_nr ' . ($filter_bib_type ? '
+                             AND ' . implode(' AND ', $filter_bib_type) : '') . ')
                           ' . $filter_delete . '
                           ' . $filter_filial . '
-                      AND v.bib_nr = vb.bib_nr (+)
-                      AND v.bib_nr = vd.bib_nr (+)
-                      AND v.bib_nr = txt.bib_nr (+)
-                      AND v.bib_nr = hold.bib_nr (+)
-                      AND v.bib_nr = eng.bib_nr (+)
-                      AND v.bib_nr = bestil.bib_nr (+)
-                      AND v.bib_nr = kat.bib_nr (+)
-                      AND v.kmd_nr = vsn.bib_nr (+)
                     ORDER BY v.kmd_nr, v.bib_nr';
             $this->watch->start('sql3');
             $oci->set_query($sql);
             $this->watch->stop('sql3');
             $this->watch->start('fetch3');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               if ($ora_par['agencyId']) {
                 $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
                 if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
@@ -2562,7 +2590,6 @@ $this->log_to_file(__FUNCTION__);
    */
   public function domainList($param) {
 // Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2642,9 +2669,11 @@ $this->log_to_file(__FUNCTION__);
    * - - - - rdfInverse
    */
   public function openSearchProfile($param) {
+// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
+      $sql_add = NULL;
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -2666,7 +2695,7 @@ $this->log_to_file(__FUNCTION__);
             $oci->set_query('SELECT DISTINCT *
                                FROM broend_to_kilder
                               WHERE searchable = :bind_y
-                              ORDER BY upper(name)');
+                              ORDER BY name');
             $kilder = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql1');
             $oci->bind('bind_agency', $agency);
@@ -2676,11 +2705,12 @@ $this->log_to_file(__FUNCTION__);
             }
             $this->watch->start('sql2');
             $oci->set_query('SELECT broendkilde_id, profil_id, name, add_to_query
-                               FROM broendprofil_to_kilder, broend_to_profiler
+                               FROM broend_to_profiler
+                               LEFT OUTER JOIN broendprofil_to_kilder
+                                 ON broendprofil_to_kilder.profil_id = broend_to_profiler.id_nr
                               WHERE broend_to_profiler.bib_nr = :bind_agency
                                 AND broendprofil_to_kilder.broendkilde_id IS NOT NULL
-                                AND broendprofil_to_kilder.profil_id IS NOT NULL
-                                AND broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id (+)' . $sql_add);
+                                AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
             $profil_res = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql2');
             $profiler = array();
@@ -2700,7 +2730,7 @@ $this->log_to_file(__FUNCTION__);
                                      FROM broend_relation, broend_kilde_relation, broend_profil_kilde_relation
                                     WHERE broend_kilde_relation.broendkilde_id = :bind_kilde_id 
                                       AND broend_profil_kilde_relation.profil_id = :bind_profil_id 
-                                      AND broend_profil_kilde_relation.kilde_relation_id =  broend_kilde_relation.id_nr 
+                                      AND broend_profil_kilde_relation.kilde_relation_id = broend_kilde_relation.id_nr 
                                       AND broend_kilde_relation.relation_id = broend_relation.id_nr');
                   $relations = $oci->fetch_all_into_assoc();
                   $this->watch->stop('sql3');
@@ -2796,6 +2826,7 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function remoteAccess($param) {
+// Postgres: doing
     if (!$this->aaa->has_right('netpunkt.dk', 550))
       Object::set_value($res, 'error', 'authentication_error');
     else {

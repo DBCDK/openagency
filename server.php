@@ -865,10 +865,11 @@ $this->log_to_file(__FUNCTION__);
           }
           $this->watch->start('sql2');
           $oci->set_query('SELECT broendkilde_id, profil_id, name, broend_to_profiler.bib_nr
-                             FROM broendprofil_to_kilder, broend_to_profiler
+                             FROM broendprofil_to_kilder
+                             LEFT OUTER JOIN broend_to_profiler
+                               ON broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id 
                             WHERE broendprofil_to_kilder.broendkilde_id IS NOT NULL
-                              AND broendprofil_to_kilder.profil_id IS NOT NULL
-                              AND broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id (+)' . $sql_add);
+                              AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
           $profil_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql2');
           $profiles = array();
@@ -955,6 +956,7 @@ $this->log_to_file(__FUNCTION__);
    * or error
    */
   public function service($param) {
+// Postgres: doing
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -986,14 +988,20 @@ $this->log_to_file(__FUNCTION__);
           $oci->bind('bind_bib_nr', $agency);
           $this->watch->start('sql1');
           $oci->set_query('SELECT ' . $q . '
-                             FROM vip v, vip_vsn vv, vip_beh vb, vip_bestil vbst, vip_danbib vd, vip_kat vk, open_agency_ors oao
-                            WHERE v.bib_nr = vd.bib_nr (+)
-                              AND v.kmd_nr = vv.bib_nr (+)
-                              AND v.bib_nr = vk.bib_nr (+)
-                              AND v.bib_nr = vb.bib_nr (+)
-                              AND v.bib_nr = vbst.bib_nr (+)
-                              AND v.bib_nr = oao.bib_nr (+)
-                              AND v.bib_nr = :bind_bib_nr');
+                             FROM vip v
+                             LEFT OUTER JOIN vip_vsn vv
+                               ON vv.bib_nr = v.kmd_nr
+                             LEFT OUTER JOIN vip_danbib vd
+                               ON vd.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_beh vb
+                               ON vb.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_bestil vbst
+                               ON vbst.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_kat vk
+                               ON vk.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN open_agency_ors oao
+                               ON oao.bib_nr = v.bib_nr
+                            WHERE v.bib_nr = :bind_bib_nr');
           $this->watch->start('fetch1');
           $oa_row = $oci->fetch_into_assoc();
           $this->watch->stop('fetch1');
@@ -1013,7 +1021,8 @@ $this->log_to_file(__FUNCTION__);
                                FROM vip_viderestil
                               WHERE bib_nr = :bind_bib_nr');
             $this->watch->start('fetch2');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $vv_row[$row['BIB_NR_VIDERESTIL']] = $row;
             }
             $this->watch->stop('fetch2');
@@ -1048,10 +1057,12 @@ $this->log_to_file(__FUNCTION__);
               $oci->bind('bind_bib_nr', $agency);
             }
             $this->watch->start('sql4');
-            $oci->set_query('SELECT fjernadgang.har_laanertjek fjernadgang_har_laanertjek, fjernadgang.*, fjernadgang_andre.*
-                               FROM fjernadgang, fjernadgang_andre
-                              WHERE fjernadgang.faust (+) = fjernadgang_andre.faust
-                                AND bib_nr = :bind_bib_nr');
+            $oci->set_query('SELECT fjernadgang.har_laanertjek fjernadgang_har_laanertjek, fjernadgang_andre.navn
+                               FROM fjernadgang
+                               LEFT OUTER JOIN fjernadgang_andre
+                                 ON fjernadgang_andre.faust = fjernadgang.faust
+                              WHERE bib_nr = :bind_bib_nr
+                                AND fjernadgang_andre.navn is not NULL');
             $fjernadgang_rows = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql4');
           }
@@ -1875,21 +1886,21 @@ $this->log_to_file(__FUNCTION__);
                LEFT OUTER JOIN vip_vsn
                  ON vip.kmd_nr = vip_vsn.bib_nr
                LEFT OUTER JOIN vip_danbib
-                 ON vip.bib_nr = vip_danbib.bib_nr
+                 ON vip_danbib.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_beh
-                 ON vip.bib_nr = vip_beh.bib_nr
+                 ON vip_beh.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_txt
-                 ON vip.bib_nr = vip_txt.bib_nr
+                 ON vip_txt.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_bogbus_holdeplads
-                 ON vip.bib_nr = vip_bogbus_holdeplads.bib_nr
+                 ON vip_bogbus_holdeplads.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_txt_eng
-                 ON vip.bib_nr = vip_txt_eng.bib_nr
+                 ON vip_txt_eng.bib_nrvip.bib_nr
                LEFT OUTER JOIN vip_bestil
-                 ON vip.bib_nr = vip_bestil.bib_nr
+                 ON vip_bestil.bib_nrvip.bib_nr
                LEFT OUTER JOIN vip_kat
-                 ON vip.bib_nr = vip_kat.bib_nr
+                 ON vip_kat.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_sup
-                 ON vip.bib_nr = vip_sup.bib_nr
+                 ON vip_sup.bib_nr = vip.bib_nr
               WHERE ' . $filter_sql . '
               ORDER BY ' . $order_by;
       //var_dump($geoloc); var_dump($sorts); var_dump($distance_sql); die($sql);
@@ -2826,7 +2837,7 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function remoteAccess($param) {
-// Postgres: doing
+// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 550))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2857,39 +2868,43 @@ $this->log_to_file(__FUNCTION__);
                                   fjernadgang.faust,
                                   fjernadgang.url,
                                   autolink
-                             FROM fjernadgang, fjernadgang_licenser, fjernadgang_dbc, fjernadgang_andre, licensguide
+                             FROM fjernadgang
+                             LEFT OUTER JOIN fjernadgang_licenser
+                               ON fjernadgang_licenser.faust = fjernadgang.faust
+                             LEFT OUTER JOIN fjernadgang_dbc
+                               ON fjernadgang_dbc.faust = fjernadgang.faust
+                             LEFT OUTER JOIN fjernadgang_andre
+                               ON fjernadgang_andre.faust = fjernadgang.faust
+                             LEFT OUTER JOIN licensguide
+                               ON licensguide.bib_nr = fjernadgang.bib_nr
                             WHERE fjernadgang.bib_nr = :bind_agency
-                              AND fjernadgang.type = :bind_har_adgang
-                              AND fjernadgang.faust = fjernadgang_licenser.faust (+)
-                              AND fjernadgang.faust = fjernadgang_dbc.faust (+)
-                              AND fjernadgang.faust = fjernadgang_andre.faust (+)
-                              AND fjernadgang.bib_nr = licensguide.bib_nr (+)');
+                              AND fjernadgang.type = :bind_har_adgang');
           $buf = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           Object::set_value($res, 'agencyId', $param->agencyId->_value);
           foreach ($buf as $val) {
-            if ($help = $val['licens_navn']) {
+            if ($help = $val['LICENS_NAVN']) {
               Object::set_value($s, 'name', $help);
               if ($val['AUTOLINK']) {
                 Object::set_value($s, 'url', $val['AUTOLINK']);
               }
               else {
-                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['licens_url']));
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
               }
             }
-            elseif ($help = $val['dbc_navn']) {
+            elseif ($help = $val['DBC_NAVN']) {
               Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['dbc_url']));
+              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
             }
-            elseif ($help = $val['andre_navn']) {
+            elseif ($help = $val['ANDRE_NAVN']) {
               Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['andre_url']));
+              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
             }
             if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
               if ($val['URL'])
                 Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
               else
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['licens_url'], $s->url->_value));
+                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
               Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
               Object::set_array_value($res, 'subscription', $s);
             }
@@ -2922,6 +2937,7 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function requestOrder($param) {
+// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2935,7 +2951,7 @@ $this->log_to_file(__FUNCTION__);
       $this->watch->start('entry');
       $res = self::get_prioritized_agency_list($agency, 'laaneveje');
     }
-    //var_dump($res); var_dump($param); die();
+    // var_dump($res); var_dump($param); die();
     Object::set_value($ret, 'requestOrderResponse', $res);
     $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
     if (empty($res->error)) $this->cache->set($cache_key, $ret);
@@ -2954,6 +2970,7 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function showOrder($param) {
+    // relation "visprioritet" does not exist
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -3019,6 +3036,7 @@ $this->log_to_file(__FUNCTION__);
    * @retval array - of agencies
    */
   private function get_prioritized_agency_list($agency, $table_name) {
+    // relation "visprioritet" does not exist
     $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
     if (empty($res->error)) {
       try {
@@ -3057,8 +3075,9 @@ $this->log_to_file(__FUNCTION__);
                       ORDER BY prionr DESC');
     $this->watch->stop('sql1');
     $this->watch->start('fetch');
-    while ($s_row = $oci->fetch_into_assoc()) {
-      Object::set_array_value($res, 'agencyId', $s_row['VILSE']);
+    $rows = $oci->fetch_all_into_assoc();
+    foreach ($rows as $row) {
+      Object::set_array_value($res, 'agencyId', $row['VILSE']);
     }
     $this->watch->stop('fetch');
     return $res;

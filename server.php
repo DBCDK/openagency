@@ -26,7 +26,6 @@
 
 
 require_once('OLS_class_lib/webServiceServer_class.php');
-// require_once('OLS_class_lib/oci_class.php');
 require_once 'OLS_class_lib/memcache_class.php';
 require_once("OLS_class_lib/pg_wrapper_class.php");
 
@@ -71,8 +70,6 @@ public function log_to_file($text, $header = null) {
    * - error
    **/
   public function automation($param) {
-//To do: Done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -98,7 +95,6 @@ $this->log_to_file(__FUNCTION__);
                                   AND materiale_id = :bind_materiale_id');
               $this->watch->start('fetch');
               $vf_row = $oci->fetch_into_assoc();
-$this->log_to_file($vf_row);
               $this->watch->stop('fetch');
             }
             catch (ociException $e) {
@@ -256,8 +252,6 @@ $this->log_to_file($vf_row);
    * - error
    */
   public function borrowerCheckList($param) {
-// Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -335,8 +329,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function encryption($param) {
-//Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -402,8 +394,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function endUserOrderPolicy($param) {
-//Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -492,8 +482,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function getCulrProfile($param) {
-// Postgres: done
-$this->log_to_file(__FUNCTION__);
     // NB. To test: Bibnr 190111
     if (!$this->aaa->has_right('netpunkt.dk', 551))
       Object::set_value($res, 'error', 'authentication_error');
@@ -566,8 +554,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function getRegistryInfo($param) {
-// Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -745,7 +731,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function getSaouLicenseInfo($param) {
-// Postgres: done
     // NB: test agency id: 700400
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
@@ -829,7 +814,6 @@ $this->log_to_file(__FUNCTION__);
    * - - - - sourceFormat
    */
   public function searchCollection($param) {
-
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -956,7 +940,6 @@ $this->log_to_file(__FUNCTION__);
    * or error
    */
   public function service($param) {
-// Postgres: doing
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -1107,6 +1090,7 @@ $this->log_to_file(__FUNCTION__);
               Object::set_value($inf, 'kvik', ($oa_row['KVIK'] == 'kvik' ? 'YES' : 'NO'));
               Object::set_value($inf, 'lookupUrl', $oa_row['URL_VIDERESTIL']);
               Object::set_value($inf, 'norfri', ($oa_row['NORFRI'] == 'norfri' ? 'YES' : 'NO'));
+              // NB: USE_LAANEVEJ: default = $agency. Pt. udleveres NULL.
               Object::set_value($inf, 'requestOrder', $oa_row['USE_LAANEVEJ']);
               Object::set_value($inf, 'sender', self::normalize_agency($oa_row['CHANGE_REQUESTER']));
               if (is_null($inf->sender->_value))
@@ -1684,9 +1668,7 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function findLibrary($param) {
-//Postgres: done
-$this->log_to_file(__FUNCTION__);
-    // $pickupAgency = NULL;
+    $pickupAgency = NULL;
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -1956,7 +1938,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function libraryRules($param) {
-// Postgres: done
     // NB: test agency id: 125060
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
@@ -2066,7 +2047,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function libraryTypeList($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500)) {
       //print_r($this->aaa->rights);
       Object::set_value($res, 'error', 'authentication_error');
@@ -2128,7 +2108,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function nameList($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2232,7 +2211,6 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function pickupAgencyList($param) {
-// Postgres: done
     $ora_par = array();
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
@@ -2544,8 +2522,6 @@ $this->log_to_file(__FUNCTION__);
    * - agencyId
    */
   public function bobTexts($param) {
-//Postgres: done
-$this->log_to_file(__FUNCTION__);
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2600,7 +2576,6 @@ $this->log_to_file(__FUNCTION__);
    * - domain 
    */
   public function domainList($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2680,7 +2655,6 @@ $this->log_to_file(__FUNCTION__);
    * - - - - rdfInverse
    */
   public function openSearchProfile($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2837,7 +2811,6 @@ $this->log_to_file(__FUNCTION__);
    * - - error
    */
   public function remoteAccess($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 550))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2937,7 +2910,6 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function requestOrder($param) {
-// Postgres: done
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2970,7 +2942,7 @@ $this->log_to_file(__FUNCTION__);
    * - error
    */
   public function showOrder($param) {
-    // relation "visprioritet" does not exist
+    // To do: relation "visprioritet" does not exist
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -3036,7 +3008,7 @@ $this->log_to_file(__FUNCTION__);
    * @retval array - of agencies
    */
   private function get_prioritized_agency_list($agency, $table_name) {
-    // relation "visprioritet" does not exist
+    // To do: $table_name "visprioritet" does not exist in postgres. yet
     $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
     if (empty($res->error)) {
       try {
@@ -3177,7 +3149,6 @@ $this->log_to_file(__FUNCTION__);
    * @param ip_list (array) - List of ip-adresses for branchDomains
    */
   private function fill_pickupAgency(&$pickupAgency, $row, $ip_list = array()) {
-$this->log_to_file(__FUNCTION__);
     if (empty($pickupAgency)) {
       Object::set_value($pickupAgency, 'agencyName', $row['VSN_NAVN'], FALSE);
       Object::set_value($pickupAgency, 'agencyId', self::normalize_agency($row['VSN_BIB_NR']), FALSE);
@@ -3400,18 +3371,13 @@ $this->log_to_file(__FUNCTION__);
       return $mix->_value;
   }
 
-  /** \brief makes a regular expression to match single_words in the DB, using ? as truncation
+  /** \brief makes a SIMILAR TO expression to match single_words in the DB, using '_' as truncation
    *
-   * select navn from vip where regexp_like(navn, '[ ,.;:]bibliotek[ .,;:$]');
-   * select bib_nr, navn from vip where regexp_like(lower(navn), '(^|[ ,.;:])krystal[a-zæøå]*([ .,;:]|$)');
+   * select foo from bar where foo SIMILAR TO build_PostgreSQL_like($par);
    *
    * @param par (string) the string to eventually locate in the DB 
-   * @return (string) the DB like expression
+   * @return (string) the DB SIMILAR TO expression
    */
-  private function build_regexp_like($par) {
-    return '(^|[ ,.;:])' . str_replace('?', '[a-zæøå0-9]*', $par) . '([ .,;:]|$)';
-  }
-
   private function build_PostgreSQL_like($par) {
     return '%' . mb_strtolower(preg_replace('/[^a-zæøåA-ZÆØÅ0-9\-\_\s]/', '_', $par)) . '%';
   }

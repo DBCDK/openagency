@@ -2942,7 +2942,6 @@ public function log_to_file($text, $header = null) {
    * - error
    */
   public function showOrder($param) {
-    // To do: relation "visprioritet" does not exist
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -3008,7 +3007,6 @@ public function log_to_file($text, $header = null) {
    * @retval array - of agencies
    */
   private function get_prioritized_agency_list($agency, $table_name) {
-    // To do: $table_name "visprioritet" does not exist in postgres. yet
     $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
     if (empty($res->error)) {
       try {
@@ -3041,8 +3039,9 @@ public function log_to_file($text, $header = null) {
     $oci->bind('bind_agency', $agency);
     $this->watch->start('sql1');
     $oci->set_query('SELECT vilse 
-                       FROM vip, ' . $table_name . '
-                      WHERE vip.' . $column . ' = bibliotek
+                       FROM ' . $table_name . '
+                       JOIN vip
+                         ON vip.' . $column . ' = ' . $table_name . '.bibliotek
                         AND vip.bib_nr = :bind_agency
                       ORDER BY prionr DESC');
     $this->watch->stop('sql1');

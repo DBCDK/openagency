@@ -26,12 +26,24 @@
 
 
 require_once('OLS_class_lib/webServiceServer_class.php');
-require_once('OLS_class_lib/oci_class.php');
 require_once 'OLS_class_lib/memcache_class.php';
+require_once("OLS_class_lib/pg_wrapper_class.php");
+
+// Default Oracle datatype used for bindings. Defined in PHP OCI database extension.
+// Added here to avoid PHP log notices. 
+define('SQLT_CHR', NULL);
 
 class openAgency extends webServiceServer {
   protected $cache;
   protected $cache_expire = array();
+
+public function log_to_file($text, $header = null) {
+  $file = '/home/jgn/debug.txt';
+  $header = !empty($header) ? $header . ' -> ' : null;
+  $f = fopen($file, 'a');
+  fwrite($f, date('Ymd H:i:s - ') . $header . print_r($text, 1) . "\n");
+  fclose($f);
+}
 
   public function __construct() {
     webServiceServer::__construct('openagency.ini');
@@ -104,7 +116,8 @@ class openAgency extends webServiceServer {
                   $ap = &$res->autPotential->_value;
                   Object::set_value($ap, 'materialType', $param->materialType->_value);
                   $this->watch->start('fetch');
-                  while ($vf_row = $oci->fetch_into_assoc()) {
+                  $vf_rows = $oci->fetch_all_into_assoc();
+                  foreach ($vf_rows as $vf_row) {
                     if ($vf_row['LAANGIVER']) {
                       Object::set_array_value($ap, 'responder', $vf_row['LAANGIVER']);
                     }
@@ -127,8 +140,10 @@ class openAgency extends webServiceServer {
                   $ap = &$res->autPotential->_value;
                   Object::set_value($ap, 'materialType', $param->materialType->_value);
                   $this->watch->start('fetch');
-                  while ($vfb_row = $oci->fetch_into_assoc())
+                  $vfb_rows = $oci->fetch_all_into_assoc();
+                  foreach ($vfb_rows as $vfb_row) {
                     Object::set_array_value($ap, 'responder', self::normalize_agency($vfb_row['BIB_NR']));
+                  }
                   $this->watch->stop('fetch');
                 }
                 catch (ociException $e) {
@@ -155,12 +170,11 @@ class openAgency extends webServiceServer {
               $ar = &$res->autRequester->_value;
               Object::set_value($ar, 'requester', $agency);
               Object::set_value($ar, 'materialType', $param->materialType->_value);
-              $this->watch->start('fetch');
               if ($vf_row = $oci->fetch_into_assoc()) {
                 Object::set_value($ar, 'willSend', self::parse_will_send($vf_row['STATUS']));
                 Object::set_value($ar, 'willSendOwn', self::parse_will_send($vf_row['STATUS_EGET']));
                 $profile_fom = $this->config->get_value('profile_for_own_material','setup');
-                if (!$profile = $profile_fom[strtolower($vf_row['PROFIL_EGET'])]) {
+                if (!$profile = $profile_fom[mb_strtolower($vf_row['PROFIL_EGET'])]) {
                   $profile = reset($profile_fom);
                 }
                 Object::set_value($ar, 'ownMaterialAgeInDays', $profile['age_in_days']);
@@ -225,7 +239,7 @@ class openAgency extends webServiceServer {
   }
 
 
-  /** \brief Fetch encryption to use when sending mails
+  /** \brief Fetch borrowerCheckList
    *
    * Request:
    * - serviceRequester
@@ -251,7 +265,7 @@ class openAgency extends webServiceServer {
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
         try {
-          $oci->bind('bind_navn', strtolower($param->serviceRequester->_value));
+          $oci->bind('bind_navn', mb_strtolower($param->serviceRequester->_value));
           if (self::xs_boolean($param->borrowerCheckAllowed->_value)) {
             $oci->bind('bind_1', '1');
             $add_sql = 'f.har_laanertjek = :bind_1';
@@ -273,7 +287,8 @@ class openAgency extends webServiceServer {
                             ORDER BY vv.navn');
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
-          while ($vk_row = $oci->fetch_into_assoc()) {
+          $vk_rows = $oci->fetch_all_into_assoc();
+          foreach ($vk_rows as $vk_row) {
             Object::set_value($b, 'agencyName', $vk_row['NAVN']);
             Object::set_value($b, 'isil', 'DK-' . $vk_row['BIB_NR']);
             Object::set_array_value($res, 'borrowerCheckLibrary', $b);
@@ -332,7 +347,8 @@ class openAgency extends webServiceServer {
           $oci->set_query('SELECT * FROM vip_krypt WHERE email = :bind_email');
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
-          while ($vk_row = $oci->fetch_into_assoc()) {
+          $vk_rows = $oci->fetch_all_into_assoc();
+          foreach ($vk_rows as $vk_row) {
             Object::set_value($o, 'encrypt', 'YES');
             Object::set_value($o, 'email', $param->email->_value);
             Object::set_value($o, 'agencyId', $vk_row['BIBLIOTEK']);
@@ -382,7 +398,7 @@ class openAgency extends webServiceServer {
       Object::set_value($res, 'error', 'authentication_error');
     else {
       $agency = self::strip_agency($param->agencyId->_value);
-      $mat_type = strtolower($param->orderMaterialType->_value);
+      $mat_type = mb_strtolower($param->orderMaterialType->_value);
       $cache_key = 'OA_endUOP_' . $this->config->get_inifile_hash() . $agency . $param->orderMaterialType->_value . $param->ownedByAgency->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -410,14 +426,17 @@ class openAgency extends webServiceServer {
           try {
             $oci->bind('bind_bib_nr', $agency);
             $this->watch->start('sql1');
-            $oci->set_query('SELECT best_modt, ' . $will_receive . ' "WR", vt.*, vte.*
-                               FROM vip_beh vb, vip_txt vt, vip_txt_eng vte
-                              WHERE vb.bib_nr = :bind_bib_nr
-                                AND vb.bib_nr = vt.bib_nr (+)
-                                AND vb.bib_nr = vte.bib_nr (+)');
+            $oci->set_query('SELECT best_modt, ' . $will_receive . ' "WR", vip_txt.*, vip_txt_eng.*
+                               FROM vip_beh
+                               LEFT OUTER JOIN vip_txt
+                                 ON vip_beh.bib_nr = vip_txt.bib_nr
+                               LEFT OUTER JOIN vip_txt_eng
+                                 ON vip_beh.bib_nr = vip_txt_eng.bib_nr
+                               WHERE vip_beh.bib_nr = :bind_bib_nr');
             $this->watch->stop('sql1');
             $this->watch->start('fetch');
-            if ($vb_row = $oci->fetch_into_assoc()) {
+            $vb_rows = $oci->fetch_all_into_assoc();
+            foreach ($vb_rows as $vb_row) {
               Object::set_value($res, 'willReceive',
                 ($vb_row['BEST_MODT'] == 'J' && ($vb_row['WR'] == 'J' || $vb_row['WR'] == 'B') ? 1 : 0));
               if ($vb_row['WR'] == 'B') {
@@ -463,6 +482,7 @@ class openAgency extends webServiceServer {
    * - error
    */
   public function getCulrProfile($param) {
+    // NB. To test: Bibnr 190111
     if (!$this->aaa->has_right('netpunkt.dk', 551))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -554,130 +574,137 @@ class openAgency extends webServiceServer {
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
         try {
-      // remove all libraries starting with 3, 5 or 6 - cannot be part of getRegistryInfo
-          //$sqls[] = '(v.bib_nr < 300000 OR (v.bib_nr >= 400000 AND v.bib_nr < 500000) OR v.bib_nr >= 700000)';
-      // remove all libraries starting with 5 or 6 - cannot be part of getRegistryInfo
-            $sqls[] = '(v.bib_nr < 500000 OR v.bib_nr >= 700000)';
-        // agencyId
-            if ($agency) {
-              $sqls[] = 'v.bib_nr = :bind_bib_nr';
-              $oci->bind('bind_bib_nr', $agency);
+          $sqls[] = '(v.bib_nr < 500000 OR v.bib_nr >= 700000)';
+          // agencyId
+          if ($agency) {
+            $sqls[] = 'v.bib_nr = :bind_bib_nr';
+            $oci->bind('bind_bib_nr', $agency);
+          }
+          // agencyName
+          if ($val = $param->agencyName->_value) {
+            $sqls[] = '(LOWER(v.navn) SIMILAR TO upper(:bind_navn)' .
+                      ' OR (LOWER(sup.tekst) SIMILAR TO upper(:bind_navn) AND sup.type = :bind_n))';
+            $oci->bind('bind_navn', self::build_PostgreSQL_like($val));
+            $oci->bind('bind_n', 'N');
+          }
+          // lastUpdated
+          if ($val = $param->lastUpdated->_value) {
+            $sqls[] = '(v.dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\')' .
+                      ' OR v.bs_dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\')' .
+                      ' OR vsn.dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\'))' .
+            $oci->bind('bind_date', $val);
+          }
+          // libraryType
+          if ($val = $param->libraryType->_value
+            && ($param->libraryType->_value == 'Folkebibliotek'
+              || $param->libraryType->_value == 'Forskningsbibliotek'
+              || $param->libraryType->_value == 'Skolebibliotek'
+              || $param->libraryType->_value == 'Other')) {
+            $sqls[] = 'vsn.bib_type = :bind_bib_type';
+            $oci->bind('bind_bib_type', $param->libraryType->_value);
+          }
+          else {    // Alle or NULL
+            $sqls[] = '(vsn.bib_type = :bind_bib_folk OR vsn.bib_type = :bind_bib_forsk)';
+            $oci->bind('bind_bib_folk', 'Folkebibliotek');
+            $oci->bind('bind_bib_forsk', 'Forskningsbibliotek');
+          }
+          // libraryStatus
+          if ($param->libraryStatus->_value == 'usynlig') {
+            $oci->bind('bind_u', 'U');
+            $sqls[] = 'v.delete_mark = :bind_u';
+          } elseif ($param->libraryStatus->_value == 'slettet') {
+            $oci->bind('bind_s', 'S');
+            $sqls[] = 'v.delete_mark = :bind_s';
+          } elseif ($param->libraryStatus->_value == 'aktive') {
+            $oci->bind('bind_u', 'U');
+            $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
+          } elseif ($param->libraryStatus->_value <> 'alle') {
+            $oci->bind('bind_u', 'U');
+            $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
+          }
+          $filter_sql = implode(' AND ', $sqls);
+          $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, 
+                        v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark,
+                        v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.p_nr, v.uni_c_nr, 
+                        v.leder, v.titel, v.leder_samarb,  v.titel_samarb, v.latitude, v.longitude, 
+                        TO_CHAR(v.dato, \'YYYY-MM-DD\') dato, TO_CHAR(v.bs_dato, \'YYYY-MM-DD\') bs_dato,
+                        vsn.navn vsn_navn, vsn.bib_nr vsn_bib_nr, vsn.bib_type vsn_bib_type,
+                        vsn.email vsn_email, vsn.tlf_nr vsn_tlf_nr, vsn.fax_nr vsn_fax_nr, 
+                        TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, vsn.oclc_symbol, 
+                        vsn.cvr_nr vsn_cvr_nr, vsn.p_nr vsn_p_nr, vsn.ean_nummer vsn_ean_nummer,
+                        vsn.leder vsn_leder, vsn.titel vsn_titel, vsn.sb_kopibestil,
+                        vb.best_modt, vb.best_modt_luk, vb.best_modt_luk_eng,
+                        txt.aabn_tid, txt.kvt_tekst_fjl, txt.service_tekst, eng.aabn_tid_e, eng.kvt_tekst_fjl_e, hold.holdeplads,
+                        bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf, bestil.ncip_address, bestil.ncip_password,
+                        kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user,
+                        kat.ncip_renew, kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn,
+                        vd.mailbestil_via, vd.url_itemorder_bestil, vd.zbestil_groupid, vd.zbestil_userid, vd.zbestil_passw,
+                        vd.holdingsformat, vd.svar_email, vd.best_txt,
+                        ors.shipping ors_shipping, ors.cancel ors_cancel, ors.answer ors_answer, 
+                        ors.cancelreply ors_cancelreply, ors.cancel_answer_synchronic ors_cancel_answer_synchronic,
+                        ors.renew ors_renew, ors.renewanswer ors_renewanswer, 
+                        ors.renew_answer_synchronic ors_renew_answer_synchronic,
+                        ors.iso18626_address, ors.iso18626_password
+                   FROM vip v
+                   LEFT OUTER JOIN vip_vsn vsn
+                     ON v.kmd_nr = vsn.bib_nr
+                   LEFT OUTER JOIN vip_danbib vd
+                     ON v.bib_nr = vd.bib_nr
+                   LEFT OUTER JOIN vip_beh vb
+                     ON v.bib_nr = vb.bib_nr
+                   LEFT OUTER JOIN vip_txt txt
+                     ON v.bib_nr = txt.bib_nr
+                   LEFT OUTER JOIN vip_bogbus_holdeplads hold
+                     ON v.bib_nr = hold.bib_nr
+                   LEFT OUTER JOIN vip_txt_eng eng
+                     ON v.bib_nr = eng.bib_nr
+                   LEFT OUTER JOIN vip_bestil bestil
+                     ON v.bib_nr = bestil.bib_nr
+                   LEFT OUTER JOIN vip_kat kat
+                     ON v.bib_nr = kat.bib_nr
+                   LEFT OUTER JOIN vip_sup sup
+                     ON v.bib_nr = sup.bib_nr 
+                   LEFT OUTER JOIN open_agency_ors ors
+                     ON v.bib_nr = ors.bib_nr 
+                  WHERE ' . $filter_sql . '
+                  ORDER BY vsn.bib_nr ASC, v.bib_nr ASC';
+          $this->watch->start('sql1');
+          $oci->set_query($sql);
+          $this->watch->stop('sql1');
+          $this->watch->start('fetch');
+          $rows = $oci->fetch_all_into_assoc();
+          foreach ($rows as $row) {
+            if (empty($curr_bib)) {
+              $curr_bib = $row['BIB_NR'];
             }
-        // agencyName
-            if ($val = $param->agencyName->_value) {
-              $sqls[] = '(regexp_like(upper(v.navn), upper(:bind_navn))' .
-                        ' OR (regexp_like(upper(sup.tekst), upper(:bind_navn)) AND sup.type = :bind_n))';
-              $oci->bind('bind_navn', self::build_regexp_like($val));
-              $oci->bind('bind_n', 'N');
-            }
-        // lastUpdated
-            if ($val = $param->lastUpdated->_value) {
-              $sqls[] = '(v.dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\')' .
-                        ' OR v.bs_dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\')' .
-                        ' OR vsn.dato >= TO_DATE(:bind_date, \'YYYY-MM-DD\'))' .
-              $oci->bind('bind_date', $val);
-            }
-        // libraryType
-            if ($val = $param->libraryType->_value
-              && ($param->libraryType->_value == 'Folkebibliotek'
-                || $param->libraryType->_value == 'Forskningsbibliotek'
-                || $param->libraryType->_value == 'Skolebibliotek'
-                || $param->libraryType->_value == 'Other')) {
-              $sqls[] = 'vsn.bib_type = :bind_bib_type';
-              $oci->bind('bind_bib_type', $param->libraryType->_value);
-            }
-            else {    // Alle or NULL
-              $sqls[] = '(vsn.bib_type = :bind_bib_folk OR vsn.bib_type = :bind_bib_forsk)';
-              $oci->bind('bind_bib_folk', 'Folkebibliotek');
-              $oci->bind('bind_bib_forsk', 'Forskningsbibliotek');
-              //$sqls[] = '(vsn.bib_type = :bind_bib_type_1 OR vsn.bib_type = :bind_bib_type_2)';
-              //$oci->bind('bind_bib_type_1', 'Folkebibliotek');
-              //$oci->bind('bind_bib_type_2', 'Forskningsbibliotek');
-            }
-        // libraryStatus
-            if ($param->libraryStatus->_value == 'usynlig') {
-              $oci->bind('bind_u', 'U');
-              $sqls[] = 'v.delete_mark = :bind_u';
-            } elseif ($param->libraryStatus->_value == 'slettet') {
-              $oci->bind('bind_s', 'S');
-              $sqls[] = 'v.delete_mark = :bind_s';
-            } elseif ($param->libraryStatus->_value <> 'alle') {
-              $oci->bind('bind_u', 'U');
-              $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
-            }
-            $filter_sql = implode(' AND ', $sqls);
-            $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, 
-                          v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark,
-                          v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.p_nr, v.uni_c_nr, 
-                          v.leder, v.titel, v.leder_samarb,  v.titel_samarb, v.latitude, v.longitude, 
-                          TO_CHAR(v.dato, \'YYYY-MM-DD\') dato, TO_CHAR(v.bs_dato, \'YYYY-MM-DD\') bs_dato,
-                          vsn.navn vsn_navn, vsn.bib_nr vsn_bib_nr, vsn.bib_type vsn_bib_type,
-                          vsn.email vsn_email, vsn.tlf_nr vsn_tlf_nr, vsn.fax_nr vsn_fax_nr, 
-                          TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, vsn.oclc_symbol, 
-                          vsn.cvr_nr vsn_cvr_nr, vsn.p_nr vsn_p_nr, vsn.ean_nummer vsn_ean_nummer,
-                          vsn.leder vsn_leder, vsn.titel vsn_titel, vsn.sb_kopibestil,
-                          vb.best_modt, vb.best_modt_luk, vb.best_modt_luk_eng,
-                          txt.aabn_tid, txt.kvt_tekst_fjl, txt.service_tekst, eng.aabn_tid_e, eng.kvt_tekst_fjl_e, hold.holdeplads,
-                          bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf, bestil.ncip_address, bestil.ncip_password,
-                          kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user,
-                          kat.ncip_renew, kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn,
-                          vd.mailbestil_via, vd.url_itemorder_bestil, vd.zbestil_groupid, vd.zbestil_userid, vd.zbestil_passw,
-                          vd.holdingsformat, vd.svar_email, vd.best_txt,
-                          ors.shipping ors_shipping, ors.cancel ors_cancel, ors.answer ors_answer, 
-                          ors.cancelreply ors_cancelreply, ors.cancel_answer_synchronic ors_cancel_answer_synchronic,
-                          ors.renew ors_renew, ors.renewanswer ors_renewanswer, 
-                          ors.renew_answer_synchronic ors_renew_answer_synchronic,
-                          ors.iso18626_address, ors.iso18626_password
-                     FROM vip v, vip_vsn vsn, vip_danbib vd, vip_beh vb, vip_txt txt, vip_txt_eng eng, 
-                          vip_sup sup, vip_bogbus_holdeplads hold, vip_bestil bestil, vip_kat kat, open_agency_ors ors
-                    WHERE ' . $filter_sql . '
-                      AND v.kmd_nr = vsn.bib_nr (+)
-                      AND v.bib_nr = vd.bib_nr (+)
-                      AND v.bib_nr = vb.bib_nr (+)
-                      AND v.bib_nr = sup.bib_nr (+)
-                      AND v.bib_nr = txt.bib_nr (+)
-                      AND v.bib_nr = hold.bib_nr (+)
-                      AND v.bib_nr = eng.bib_nr (+)
-                      AND v.bib_nr = bestil.bib_nr (+)
-                      AND v.bib_nr = ors.bib_nr (+)
-                      AND v.bib_nr = kat.bib_nr (+)
-                    ORDER BY vsn.bib_nr ASC, v.bib_nr ASC';
-            $this->watch->start('sql1');
-            $oci->set_query($sql);
-            $this->watch->stop('sql1');
-            $this->watch->start('fetch');
-            while ($row = $oci->fetch_into_assoc()) {
-              if (empty($curr_bib)) {
-                $curr_bib = $row['BIB_NR'];
-              }
-              if ($curr_bib <> $row['BIB_NR']) {
-                Object::set_array_value($res, 'registryInfo', $registryInfo);
-                unset($registryInfo);
-                $curr_bib = $row['BIB_NR'];
-              }
-              if ($row) {
-                self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
-                $dbc_target = $this->config->get_value('dbc_target', 'setup');
-                if ($row['HOLDINGSFORMAT'] == 'B') {
-                  self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
-                  self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
-                }
-                if ($row['MAILBESTIL_VIA'] == 'C') {
-                  self::set_z3950Ill($registryInfo, $row);
-                }
-                elseif ($row['MAILBESTIL_VIA'] == 'E') {
-                  self::set_iso18626($registryInfo, $row);
-                  if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
-                    self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
-                  }
-                  self::set_z3950Ill($registryInfo, $row, FALSE);
-                }
-              }
-            }
-            $this->watch->stop('fetch');
-            if ($registryInfo) {
+            if ($curr_bib <> $row['BIB_NR']) {
               Object::set_array_value($res, 'registryInfo', $registryInfo);
+              unset($registryInfo);
+              $curr_bib = $row['BIB_NR'];
             }
+            if ($row) {
+              self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
+              $dbc_target = $this->config->get_value('dbc_target', 'setup');
+              if ($row['HOLDINGSFORMAT'] == 'B') {
+                self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
+              }
+              if ($row['MAILBESTIL_VIA'] == 'C') {
+                self::set_z3950Ill($registryInfo, $row);
+              }
+              elseif ($row['MAILBESTIL_VIA'] == 'E') {
+                self::set_iso18626($registryInfo, $row);
+                if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
+                  self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                }
+                self::set_z3950Ill($registryInfo, $row, FALSE);
+              }
+            }
+          }
+          $this->watch->stop('fetch');
+          if ($registryInfo) {
+            Object::set_array_value($res, 'registryInfo', $registryInfo);
+          }
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
@@ -704,6 +731,7 @@ class openAgency extends webServiceServer {
    * - error
    */
   public function getSaouLicenseInfo($param) {
+    // NB: test agency id: 700400
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -726,14 +754,16 @@ class openAgency extends webServiceServer {
           $oci->bind('bind_fb_licens', $fb_licens);
           $this->watch->start('sql1');
           $oci->set_query('SELECT ud.bib_nr, domain, proxyurl 
-                             FROM user_domains ud, licensguide lg
-                            WHERE ' . $where . ' origin_source = :bind_fb_licens
-                              AND ud.bib_nr = lg.bib_nr (+)
-                            ORDER BY bib_nr');
+                             FROM user_domains ud
+                           LEFT OUTER JOIN licensguide lg
+                             ON lg.bib_nr = ud.bib_nr 
+                           WHERE ' . $where . ' origin_source = :bind_fb_licens
+                           ORDER BY bib_nr');
           $this->watch->stop('sql1');
           $last_bib = '';
           $this->watch->start('fetch');
-          while ($sl_row = $oci->fetch_into_assoc()) {
+          $rows = $oci->fetch_all_into_assoc();
+          foreach ($rows as $sl_row) {
             if ($last_lib != $sl_row['BIB_NR']) {
               if ($last_lib) {
                 Object::set_array_value($res, 'saouLicenseInfo', $sl);
@@ -819,10 +849,11 @@ class openAgency extends webServiceServer {
           }
           $this->watch->start('sql2');
           $oci->set_query('SELECT broendkilde_id, profil_id, name, broend_to_profiler.bib_nr
-                             FROM broendprofil_to_kilder, broend_to_profiler
+                             FROM broendprofil_to_kilder
+                             LEFT OUTER JOIN broend_to_profiler
+                               ON broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id 
                             WHERE broendprofil_to_kilder.broendkilde_id IS NOT NULL
-                              AND broendprofil_to_kilder.profil_id IS NOT NULL
-                              AND broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id (+)' . $sql_add);
+                              AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
           $profil_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql2');
           $profiles = array();
@@ -940,14 +971,20 @@ class openAgency extends webServiceServer {
           $oci->bind('bind_bib_nr', $agency);
           $this->watch->start('sql1');
           $oci->set_query('SELECT ' . $q . '
-                             FROM vip v, vip_vsn vv, vip_beh vb, vip_bestil vbst, vip_danbib vd, vip_kat vk, open_agency_ors oao
-                            WHERE v.bib_nr = vd.bib_nr (+)
-                              AND v.kmd_nr = vv.bib_nr (+)
-                              AND v.bib_nr = vk.bib_nr (+)
-                              AND v.bib_nr = vb.bib_nr (+)
-                              AND v.bib_nr = vbst.bib_nr (+)
-                              AND v.bib_nr = oao.bib_nr (+)
-                              AND v.bib_nr = :bind_bib_nr');
+                             FROM vip v
+                             LEFT OUTER JOIN vip_vsn vv
+                               ON vv.bib_nr = v.kmd_nr
+                             LEFT OUTER JOIN vip_danbib vd
+                               ON vd.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_beh vb
+                               ON vb.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_bestil vbst
+                               ON vbst.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN vip_kat vk
+                               ON vk.bib_nr = v.bib_nr
+                             LEFT OUTER JOIN open_agency_ors oao
+                               ON oao.bib_nr = v.bib_nr
+                            WHERE v.bib_nr = :bind_bib_nr');
           $this->watch->start('fetch1');
           $oa_row = $oci->fetch_into_assoc();
           $this->watch->stop('fetch1');
@@ -967,7 +1004,8 @@ class openAgency extends webServiceServer {
                                FROM vip_viderestil
                               WHERE bib_nr = :bind_bib_nr');
             $this->watch->start('fetch2');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $vv_row[$row['BIB_NR_VIDERESTIL']] = $row;
             }
             $this->watch->stop('fetch2');
@@ -1002,10 +1040,12 @@ class openAgency extends webServiceServer {
               $oci->bind('bind_bib_nr', $agency);
             }
             $this->watch->start('sql4');
-            $oci->set_query('SELECT fjernadgang.har_laanertjek fjernadgang_har_laanertjek, fjernadgang.*, fjernadgang_andre.*
-                               FROM fjernadgang, fjernadgang_andre
-                              WHERE fjernadgang.faust (+) = fjernadgang_andre.faust
-                                AND bib_nr = :bind_bib_nr');
+            $oci->set_query('SELECT fjernadgang.har_laanertjek fjernadgang_har_laanertjek, fjernadgang_andre.navn
+                               FROM fjernadgang
+                               LEFT OUTER JOIN fjernadgang_andre
+                                 ON fjernadgang_andre.faust = fjernadgang.faust
+                              WHERE bib_nr = :bind_bib_nr
+                                AND fjernadgang_andre.navn is not NULL');
             $fjernadgang_rows = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql4');
           }
@@ -1050,6 +1090,7 @@ class openAgency extends webServiceServer {
               Object::set_value($inf, 'kvik', ($oa_row['KVIK'] == 'kvik' ? 'YES' : 'NO'));
               Object::set_value($inf, 'lookupUrl', $oa_row['URL_VIDERESTIL']);
               Object::set_value($inf, 'norfri', ($oa_row['NORFRI'] == 'norfri' ? 'YES' : 'NO'));
+              // NB: USE_LAANEVEJ: default = $agency. Pt. udleveres NULL.
               Object::set_value($inf, 'requestOrder', $oa_row['USE_LAANEVEJ']);
               Object::set_value($inf, 'sender', self::normalize_agency($oa_row['CHANGE_REQUESTER']));
               if (is_null($inf->sender->_value))
@@ -1627,11 +1668,15 @@ class openAgency extends webServiceServer {
    * - - error
    */
   public function findLibrary($param) {
+    $pickupAgency = NULL;
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
-      if ($geoloc = $param->geolocation->_value) {
-        $geo_cache = $geoloc->latitude->_value . '_' . $geoloc->longitude->_value . '_' . $geoloc->distanceInMeter->_value;
+      if (!empty($param->geolocation) && $geoloc = $param->geolocation->_value) {
+        $latitude = (!empty($param->latitude)) ? $geoloc->latitude->_value : NULL;
+        $longitude = (!empty($param->longitude)) ? $geoloc->longitude->_value : NULL;
+        $distanceInMeter = (!empty($param->distanceInMeter)) ? $geoloc->distanceInMeter->_value : NULL;
+        $geo_cache = $latitude . '_' . $longitude . '_' . $distanceInMeter;
       }
       $cache_key = 'OA_FinL_' . 
         $this->config->get_inifile_hash() . 
@@ -1656,84 +1701,95 @@ class openAgency extends webServiceServer {
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       // agencyId
       if ($agency_id = self::strip_agency($param->agencyId->_value)) {
-        $sqls[] = 'v.bib_nr = :bind_bib_nr';
+        $sqls[] = 'vip.bib_nr = :bind_bib_nr';
         $oci->bind('bind_bib_nr', $agency_id);
       }
       // agencyName
-      if ($val = $param->agencyName->_value) {
-        $sqls[] = '(regexp_like(upper(v.navn), upper(:bind_navn))' .
-            ' OR (regexp_like(upper(sup.tekst), upper(:bind_navn)) AND sup.type = :bind_n))';
-        $oci->bind('bind_navn', self::build_regexp_like($val));
+      if (!empty($param->agencyName) && $val = $param->agencyName->_value) {
+        $sqls[] = '(LOWER(vip.navn) SIMILAR TO :bind_navn)' .
+                  ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_navn AND vip_sup.type = :bind_n)';
+        $oci->bind('bind_navn', self::build_PostgreSQL_like($val));
         $oci->bind('bind_n', 'N');
       }
       // agencyAddress
-      if ($val = $param->agencyAddress->_value) {
-        $sqls[] = '(regexp_like(upper(v.badr), upper(:bind_addr))' . 
-            ' OR (regexp_like(upper(sup.tekst), upper(:bind_addr)) AND sup.type = :bind_a)' .
-            ' OR regexp_like(upper(vsn.badr), upper(:bind_addr)))';
-        $oci->bind('bind_addr', self::build_regexp_like($val));
+      if (!empty($param->agencyAddress) && $val = $param->agencyAddress->_value) {
+        $sqls[] = '(LOWER(vip.badr) SIMILAR TO :bind_addr' . 
+            ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_addr AND vip_sup.type = :bind_a)' .
+            ' OR LOWER(vip_vsn.badr) SIMILAR TO upper(:bind_addr))';
+        $oci->bind('bind_addr', self::build_PostgreSQL_like($val));
         $oci->bind('bind_a', 'A');
       }
       // postalCode
-      if ($val = $param->postalCode->_value) {
-        $sqls[] = '(regexp_like(upper(v.bpostnr), upper(:bind_postnr))' .
-            ' OR (regexp_like(upper(sup.tekst), upper(:bind_postnr)) AND sup.type = :bind_p))';
-        $oci->bind('bind_postnr', self::build_regexp_like($val));
+      if (!empty($param->postalCode) && $val = $param->postalCode->_value) {
+        $sqls[] = '(LOWER(vip.bpostnr) SIMILAR TO :bind_postnr' .
+            ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_postnr AND vip_sup.type = :bind_p))';
+        $oci->bind('bind_postnr', self::build_PostgreSQL_like($val));
         $oci->bind('bind_p', 'P');
       }
+      
       // city
-      if ($val = $param->city->_value) {
-        $sqls[] = 'regexp_like(upper(v.bcity), upper(:bind_city))';
-        $oci->bind('bind_city', self::build_regexp_like($val));
+      if (!empty($param->city) && $val = $param->city->_value) {
+        $sqls[] = 'LOWER(vip.bcity) SIMILAR TO :bind_city';
+        $oci->bind('bind_city', self::build_PostgreSQL_like($val));
       }
+      
       // stilNumber
-      if ($val = $param->stilNumber->_value) {
-        $sqls[] = 'v.uni_c_nr = :bind_uni_c_nr';
+      if (!empty($param->stilNumber) && $val = $param->stilNumber->_value) {
+        $sqls[] = 'vip.uni_c_nr = :bind_uni_c_nr';
         $oci->bind('bind_uni_c_nr', $val);
       }
+      
       // anyField
-      if ($val = $param->anyField->_value) {
+      if (!empty($param->anyField) && $val = $param->anyField->_value) {
         $bib_nr = self::strip_agency($param->anyField->_value);
         if (is_numeric($bib_nr) && (strlen($bib_nr) == 6)) {
           $oci->bind('bind_bib_nr', $bib_nr);
-          $bibnr_sql = '(v.bib_nr = :bind_bib_nr) OR ';
+          $bibnr_sql = '(vip.bib_nr = :bind_bib_nr) OR ';
         }
         $sqls[] = '(' . $bibnr_sql . 
-          'regexp_like(upper(v.navn), upper(:bind_any))' .
-          ' OR regexp_like(upper(v.badr), upper(:bind_any))' .
-          ' OR regexp_like(upper(v.bpostnr), upper(:bind_any))' .
-          ' OR regexp_like(upper(v.bcity), upper(:bind_any))' .
-          ' OR (regexp_like(upper(sup.tekst), upper(:bind_any)) AND sup.type = :bind_n)' .
-          ' OR (regexp_like(upper(sup.tekst), upper(:bind_any)) AND sup.type = :bind_a)' .
-          ' OR (regexp_like(upper(sup.tekst), upper(:bind_any)) AND sup.type = :bind_p))';
-        $oci->bind('bind_any', self::build_regexp_like($val));
+          'LOWER(vip.navn) SIMILAR TO :bind_any' .
+          ' OR LOWER(vip.badr) SIMILAR TO :bind_any' .
+          ' OR LOWER(vip.bpostnr) SIMILAR TO :bind_any' .
+          ' OR LOWER(vip.bcity) SIMILAR TO :bind_any' .
+          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_n)' .
+          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_a)' .
+          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_p))';
+        $oci->bind('bind_any', self::build_PostgreSQL_like($val));
         $oci->bind('bind_a', 'A');
         $oci->bind('bind_n', 'N');
         $oci->bind('bind_p', 'P');
       }
+      
       // libraryType
-      if ($val = $param->libraryType->_value
+      if ((!empty($param->libraryType) && $val = $param->libraryType->_value)
           && ($param->libraryType->_value == 'Folkebibliotek'
             || $param->libraryType->_value == 'Forskningsbibliotek'
             || $param->libraryType->_value == 'Skolebibliotek'
             || $param->libraryType->_value == 'Other')) {
-        $sqls[] = 'vsn.bib_type = :bind_bib_type';
+        $sqls[] = 'vip_vsn.bib_type = :bind_bib_type';
         $oci->bind('bind_bib_type', $param->libraryType->_value);
       }
       elseif (empty($agency_id) && empty($param->stilNumber->_value)) {
-        $sqls[] = '(vsn.bib_type != :bind_bib_type OR vsn.bib_type IS null)';
+        $sqls[] = '(vip_vsn.bib_type != :bind_bib_type OR vip_vsn.bib_type IS null)';
         $oci->bind('bind_bib_type', 'Skolebibliotek');
       }
+      
       // libraryStatus
-      if ($param->libraryStatus->_value == 'usynlig') {
-        $oci->bind('bind_u', 'U');
-        $sqls[] = 'v.delete_mark = :bind_u';
-      } elseif ($param->libraryStatus->_value == 'slettet') {
-        $oci->bind('bind_s', 'S');
-        $sqls[] = 'v.delete_mark = :bind_s';
-      } elseif ($param->libraryStatus->_value <> 'alle') {
-        $sqls[] = 'v.delete_mark is null';
+      $libraryStatus_sql = 'vip.delete_mark is null';
+      if (!empty($param->libraryStatus)) {
+        if ($param->libraryStatus->_value == 'usynlig') {
+          $oci->bind('bind_u', 'U');
+          $libraryStatus_sql = 'vip.delete_mark = :bind_u';
+        } elseif ($param->libraryStatus->_value == 'slettet') {
+          $oci->bind('bind_s', 'S');
+          $libraryStatus_sql = 'vip.delete_mark = :bind_s';
+        } elseif ($param->libraryStatus->_value == 'aktive') {
+          $oci->bind('bind_u', 'U');
+          $libraryStatus_sql = '(vip.delete_mark = :bind_u OR vip.delete_mark is NULL)';
+        }
       }
+      $sqls[] = $libraryStatus_sql;
+      
       // pickupAllowed
       if (isset($param->pickupAllowed->_value)) {
         $j = 'J';
@@ -1748,6 +1804,8 @@ class openAgency extends webServiceServer {
       $filter_sql = implode(' AND ', $sqls);
 
       // sort
+      $distance_sql = NULL;
+      $sort_order = NULL;
       if (isset($param->sort)) {
         if (is_array($param->sort)) {
           $sorts = $param->sort;
@@ -1757,12 +1815,12 @@ class openAgency extends webServiceServer {
         }
         foreach ($sorts as $s) {
           switch ($s->_value) {
-            case 'agencyId':      $sort_order[] = 'v.bib_nr'; break;
-            case 'agencyName':    $sort_order[] = 'v.navn'; break;
-            case 'agencyAddress': $sort_order[] = 'v.badr'; break;
-            case 'postalCode':    $sort_order[] = 'v.postnr'; break;
-            case 'city':          $sort_order[] = 'v.bcity'; break;
-            case 'libraryType':   $sort_order[] = 'vsn.bib_type'; break;
+            case 'agencyId':      $sort_order[] = 'vip.bib_nr'; break;
+            case 'agencyName':    $sort_order[] = 'vip.navn'; break;
+            case 'agencyAddress': $sort_order[] = 'vip.badr'; break;
+            case 'postalCode':    $sort_order[] = 'vip.postnr'; break;
+            case 'city':          $sort_order[] = 'vip.bcity'; break;
+            case 'libraryType':   $sort_order[] = 'vip_vsn.bib_type'; break;
           }
         }
         if ((count($sorts) == 1) && ($sorts[0]->_value == 'distance') && isset($geoloc->latitude->_value) && isset($geoloc->latitude->_value)) {
@@ -1776,48 +1834,56 @@ class openAgency extends webServiceServer {
           $latitude = $geoloc->latitude->_value;
           $longitude = $geoloc->longitude->_value;
           // Flat earth society: 
-          //$distance_sql = "$deg2meter * SQRT(POWER(v.latitude-$latitude,2) + POWER(v.longitude-$longitude,2)) distance, ";
+          //$distance_sql = "$deg2meter * SQRT(POWER(vip.latitude-$latitude,2) + POWER(vip.longitude-$longitude,2)) distance, ";
           // Haversine: https://en.wikipedia.org/wiki/Haversine_formula
-          $distance_sql = "$deg2meter * $rad2deg * (ACOS(COS($deg2rad*$latitude) * COS($deg2rad*v.latitude) * COS($deg2rad*($longitude-v.longitude)) + SIN($deg2rad*$latitude) * SIN($deg2rad*v.latitude))) distance, ";
+          $distance_sql = "$deg2meter * $rad2deg * (ACOS(COS($deg2rad*$latitude) * COS($deg2rad*vip.latitude) * COS($deg2rad*($longitude-vip.longitude)) + SIN($deg2rad*$latitude) * SIN($deg2rad*vip.latitude))) distance, ";
         }
       }
       if (is_array($sort_order)) {
         $order_by = implode(', ', $sort_order);
       }
       else {
-        $order_by = 'v.bib_nr';
+        $order_by = 'vip.bib_nr';
       }
 
-      $sql ='SELECT ' . $distance_sql . 'v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, 
-                    v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark,
-                    v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.p_nr, v.uni_c_nr, v.leder, v.titel,
-                    TO_CHAR(v.dato, \'YYYY-MM-DD\') dato, TO_CHAR(v.bs_dato, \'YYYY-MM-DD\') bs_dato,
-                    v.latitude, v.longitude, v.knudepunkt, v.leder_samarb,  v.titel_samarb, 
-                    vsn.navn vsn_navn, vsn.bib_nr vsn_bib_nr, vsn.bib_type vsn_bib_type,
-                    vsn.email vsn_email, vsn.tlf_nr vsn_tlf_nr, vsn.fax_nr vsn_fax_nr, 
-                    vsn.leder vsn_leder, vsn.titel vsn_titel, vsn.koerselsordning,
-                    TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, vsn.oclc_symbol, vsn.sb_kopibestil,
-                    vsn.cvr_nr vsn_cvr_nr, vsn.p_nr vsn_p_nr, vsn.ean_nummer vsn_ean_nummer,
-                    vd.svar_email, vd.mailbestil_via, vd.best_txt,
-                    vb.best_modt, vb.best_modt_luk, vb.best_modt_luk_eng,
-                    txt.aabn_tid, txt.kvt_tekst_fjl, txt.service_tekst, 
-                    eng.aabn_tid_e, eng.kvt_tekst_fjl_e, hold.holdeplads,
-                    bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf, bestil.ncip_address, bestil.ncip_password,
-                    kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user,
-                    kat.ncip_renew, kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn, 
-                    kat.url_viderestil, kat.url_bib_kat
-               FROM vip v, vip_vsn vsn, vip_danbib vd, vip_beh vb, vip_txt txt, vip_txt_eng eng, vip_sup sup,
-                    vip_bogbus_holdeplads hold, vip_bestil bestil, vip_kat kat
+      $sql ='SELECT ' . $distance_sql . 'vip.bib_nr, vip.navn, vip.navn_e, vip.navn_k, vip.navn_e_k, vip.type, vip.tlf_nr, vip.email, vip.badr, 
+                    vip.bpostnr, vip.bcity, vip.isil, vip.kmd_nr, vip.url_homepage, vip.url_payment, vip.delete_mark,
+                    vip.afsaetningsbibliotek, vip.afsaetningsnavn_k, vip.p_nr, vip.uni_c_nr, vip.leder, vip.titel,
+                    TO_CHAR(vip.dato, \'YYYY-MM-DD\') "dato", TO_CHAR(vip.bs_dato, \'YYYY-MM-DD\') "bs_dato",
+                    vip.latitude, vip.longitude, vip.knudepunkt, vip.leder_samarb,  vip.titel_samarb, 
+                    vip_vsn.navn vsn_navn, vip_vsn.bib_nr vsn_bib_nr, vip_vsn.bib_type vsn_bib_type,
+                    vip_vsn.email vsn_email, vip_vsn.tlf_nr vsn_tlf_nr, vip_vsn.fax_nr vsn_fax_nr, 
+                    vip_vsn.leder vsn_leder, vip_vsn.titel vsn_titel, vip_vsn.koerselsordning,
+                    TO_CHAR(vip_vsn.dato, \'YYYY-MM-DD\') "vsn_dato", vip_vsn.oclc_symbol, vip_vsn.sb_kopibestil,
+                    vip_vsn.cvr_nr vsn_cvr_nr, vip_vsn.p_nr vsn_p_nr, vip_vsn.ean_nummer vsn_ean_nummer,
+                    vip_danbib.svar_email, vip_danbib.mailbestil_via, vip_danbib.best_txt,
+                    vip_beh.best_modt, vip_beh.best_modt_luk, vip_beh.best_modt_luk_eng,
+                    vip_txt.aabn_tid, vip_txt.kvt_tekst_fjl, vip_txt.service_tekst, 
+                    vip_txt_eng.aabn_tid_e, vip_txt_eng.kvt_tekst_fjl_e, vip_bogbus_holdeplads.holdeplads,
+                    vip_bestil.url_serv_dkl, vip_bestil.support_email, vip_bestil.support_tlf, vip_bestil.ncip_address, vip_bestil.ncip_password,
+                    vip_kat.url_best_blanket, vip_kat.url_best_blanket_text, vip_kat.url_laanerstatus, vip_kat.ncip_lookup_user,
+                    vip_kat.ncip_renew, vip_kat.ncip_cancel, vip_kat.ncip_update_request, vip_kat.filial_vsn, 
+                    vip_kat.url_viderestil, vip_kat.url_bib_kat
+               FROM vip
+               LEFT OUTER JOIN vip_vsn
+                 ON vip.kmd_nr = vip_vsn.bib_nr
+               LEFT OUTER JOIN vip_danbib
+                 ON vip_danbib.bib_nr = vip.bib_nr
+               LEFT OUTER JOIN vip_beh
+                 ON vip_beh.bib_nr = vip.bib_nr
+               LEFT OUTER JOIN vip_txt
+                 ON vip_txt.bib_nr = vip.bib_nr
+               LEFT OUTER JOIN vip_bogbus_holdeplads
+                 ON vip_bogbus_holdeplads.bib_nr = vip.bib_nr
+               LEFT OUTER JOIN vip_txt_eng
+                 ON vip_txt_eng.bib_nrvip.bib_nr
+               LEFT OUTER JOIN vip_bestil
+                 ON vip_bestil.bib_nrvip.bib_nr
+               LEFT OUTER JOIN vip_kat
+                 ON vip_kat.bib_nr = vip.bib_nr
+               LEFT OUTER JOIN vip_sup
+                 ON vip_sup.bib_nr = vip.bib_nr
               WHERE ' . $filter_sql . '
-                AND v.kmd_nr = vsn.bib_nr (+)
-                AND v.bib_nr = vd.bib_nr (+)
-                AND v.bib_nr = vb.bib_nr (+)
-                AND v.bib_nr = sup.bib_nr (+)
-                AND v.bib_nr = txt.bib_nr (+)
-                AND v.bib_nr = hold.bib_nr (+)
-                AND v.bib_nr = eng.bib_nr (+)
-                AND v.bib_nr = bestil.bib_nr (+)
-                AND v.bib_nr = kat.bib_nr (+)
               ORDER BY ' . $order_by;
       //var_dump($geoloc); var_dump($sorts); var_dump($distance_sql); die($sql);
       $this->watch->start('sql1');
@@ -1826,7 +1892,8 @@ class openAgency extends webServiceServer {
         $oci->set_query($sql);
         $this->watch->stop('sql1');
         $this->watch->start('fetch');
-        while ($row = $oci->fetch_into_assoc()) {
+       $rows = $oci->fetch_all_into_assoc();
+       foreach ($rows as $row) {
           if (empty($curr_bib)) {
             $curr_bib = $row['BIB_NR'];
           }
@@ -1842,8 +1909,9 @@ class openAgency extends webServiceServer {
           }
         }
         $this->watch->stop('fetch');
-        if ($pickupAgency)
+        if ($pickupAgency) {
           Object::set_array_value($res, 'pickupAgency', $pickupAgency);
+        }
       }
       catch (ociException $e) {
         $this->watch->stop('sql1');
@@ -1870,6 +1938,7 @@ class openAgency extends webServiceServer {
    * - error
    */
   public function libraryRules($param) {
+    // NB: test agency id: 125060
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -1900,7 +1969,7 @@ class openAgency extends webServiceServer {
               $rules = $binds = array();
               foreach ($lib_rule as $idx => $rule) {
                 if ($value = $rule->_value->string->_value) {
-                  if ($enum = $enum_map[strtolower($rule->_value->name->_value)]) {
+                  if ($enum = $enum_map[mb_strtolower($rule->_value->name->_value)]) {
                     $value = array_search($value, $enum);
                   }
                 }
@@ -1919,20 +1988,22 @@ class openAgency extends webServiceServer {
             }
             $this->watch->start('sql1');
             $oci->set_query('SELECT vip_vsn.bib_type, vip_library_rules.* 
-                               FROM vip_library_rules, vip_vsn, vip
-                              WHERE vip.kmd_nr = vip_vsn.bib_nr (+)
-                                AND vip.bib_nr = vip_library_rules.bib_nr ' . $and_bib . ' 
+                               FROM vip_library_rules, vip
+                               LEFT OUTER JOIN vip_vsn
+                                 ON vip.kmd_nr = vip_vsn.bib_nr
+                              WHERE vip.bib_nr = vip_library_rules.bib_nr ' . $and_bib . ' 
                               ORDER BY vip_library_rules.bib_nr ASC');
             $this->watch->stop('sql1');
             //$mem = memory_get_usage();
             $this->watch->start('fetch');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               Object::set_value($o, 'agencyId', self::normalize_agency($row['BIB_NR']));
               Object::set_value($o, 'agencyType', $row['BIB_TYPE']);
               foreach ($row as $name => $value) {
                 if ($name != 'BIB_NR' && $name != 'BIB_TYPE') {
-                  Object::set_value($r, 'name', strtolower($name));
-                  if ($enum = $enum_map[strtolower($name)]) {
+                  Object::set_value($r, 'name', mb_strtolower($name));
+                  if ($enum = $enum_map[mb_strtolower($name)]) {
                     Object::set_value($r, 'string', $enum[$value]);
                   }
                   else {
@@ -1998,9 +2069,10 @@ class openAgency extends webServiceServer {
                               AND (v.delete_mark is null OR v.delete_mark = :bind_u)
                             ORDER BY bib_nr');
           $this->watch->stop('sql1');
-//$mem = memory_get_usage();
+          //$mem = memory_get_usage();
           $this->watch->start('fetch');
-          while ($row = $oci->fetch_into_assoc()) {
+          $rows = $oci->fetch_all_into_assoc();
+          foreach ($rows as $row) {
             Object::set_value($o, 'agencyId', self::normalize_agency($row['VSN_BIB_NR']));
             Object::set_value($o, 'agencyType', $row['BIB_TYPE']);
             Object::set_value($o, 'branchId', self::normalize_agency($row['BIB_NR']));
@@ -2009,7 +2081,7 @@ class openAgency extends webServiceServer {
             unset($o);
           }
           $this->watch->stop('fetch');
-//$this->watch->sums['mem'] = memory_get_usage() - $mem;
+          //$this->watch->sums['mem'] = memory_get_usage() - $mem;
         }
         catch (ociException $e) {
           $this->watch->stop('sql1');
@@ -2049,13 +2121,15 @@ class openAgency extends webServiceServer {
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
+        $filter_bib_type = NULL;
         if ($param->libraryType->_value == 'Alle' ||
             $param->libraryType->_value == 'Folkebibliotek' ||
             $param->libraryType->_value == 'Forskningsbibliotek' ||
             $param->libraryType->_value == 'Skolebibliotek' ||
-            $param->libraryType->_value == 'Other') {
+            $param->libraryType->_value == 'Other' ||
+            empty($param->libraryType->_value)) {
           try {
-            if ($param->libraryType->_value <> 'Alle') {
+            if (!empty($param->libraryType->_value) && $param->libraryType->_value <> 'Alle') {
               $filter_bib_type = 'AND vsn.bib_type = :bind_bib_type';
               $oci->bind('bind_bib_type', $param->libraryType->_value);
             }
@@ -2065,7 +2139,8 @@ class openAgency extends webServiceServer {
                                FROM vip v, vip_vsn vsn
                               WHERE v.bib_nr = vsn.bib_nr
                                 AND (v.delete_mark is null OR v.delete_mark = :bind_u) ' . $filter_bib_type);
-            while ($vv_row = $oci->fetch_into_assoc()) {
+            $vv_rows = $oci->fetch_all_into_assoc();
+            foreach ($vv_rows as $vv_row) {
               Object::set_value($o, 'agencyId', self::normalize_agency($vv_row['BIB_NR']));
               Object::set_value($o, 'agencyName', $vv_row['NAVN']);
               Object::set_array_value($res, 'agency', $o);
@@ -2136,6 +2211,7 @@ class openAgency extends webServiceServer {
    * - - error
    */
   public function pickupAgencyList($param) {
+    $ora_par = array();
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
@@ -2183,14 +2259,14 @@ class openAgency extends webServiceServer {
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
-        if (is_array($ora_par) ||
+        if (!empty($ora_par) ||
             $param->libraryType->_value == 'Alle' ||
             $param->libraryType->_value == 'Folkebibliotek' ||
             $param->libraryType->_value == 'Forskningsbibliotek' ||
             $param->libraryType->_value == 'Skolebibliotek' ||
             $param->libraryType->_value == 'Other') {
           try {
-            if ($ora_par) {
+            if (!empty($ora_par)) {
               foreach ($ora_par as $key => $val) {
                 $add_sql = '';
                 foreach ($val as $par) {
@@ -2218,7 +2294,7 @@ class openAgency extends webServiceServer {
                 if ($add_sql) $filter_bib_type[] = $add_sql . ")";
               }
             }
-            if ($ora_par['agencyId']) {
+            if (!empty($ora_par['agencyId'])) {
               foreach ($ora_par['agencyId'] as $agency) {
                 $agency_list .= ($agency_list ? ', ' : '') . ':bind_' . $agency;
                 $oci->bind('bind_' . $agency, $agency);
@@ -2243,38 +2319,44 @@ class openAgency extends webServiceServer {
             } elseif ($param->libraryStatus->_value == 'slettet') {
               $oci->bind('bind_s', 'S');
               $filter_delete_vsn = 'v.delete_mark = :bind_s AND ';
+            } elseif ($param->libraryStatus->_value == 'aktive') {
+              $oci->bind('bind_u', 'U');
+              $filter_delete_vsn = '(v.delete_mark = :bind_u OR v.delete_mark is null) AND ';
             } else {
               $filter_delete_vsn = 'v.delete_mark is null AND ';
             }
             $sql = 'SELECT vsn.bib_nr, vsn.navn, vsn.bib_type, vsn.tlf_nr, vsn.email,
                            vsn.badr, vsn.bpostnr, vsn.bcity, vsn.url, vsn.sb_kopibestil,
                            vsn.cvr_nr, vsn.p_nr, vsn.ean_nummer
-                      FROM vip_vsn vsn, vip v, vip_sup vs
-                     WHERE ' . $filter_delete_vsn . ($filter_bib_type ? implode(' AND ', $filter_bib_type) . ' AND ' : '') . '
-                             v.bib_nr = vs.bib_nr (+)
+                      FROM vip_vsn vsn, vip v
+                      LEFT OUTER JOIN vip_sup vs
+                        ON vs.bib_nr = v.bib_nr
+                     WHERE ' . $filter_delete_vsn . ($filter_bib_type ? implode(' AND ', $filter_bib_type) : '') . '
                        AND v.kmd_nr = vsn.bib_nr
                      ORDER BY vsn.bib_nr';
             $this->watch->start('sql1');
             $oci->set_query($sql);
             $this->watch->stop('sql1');
             $this->watch->start('fetch1');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $bib_nr = &$row['BIB_NR'];
               $vsn[$bib_nr] = $row;
             }
             $this->watch->stop('fetch1');
 
-            $sql = 'SELECT unique bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL';
+            $sql = 'SELECT DISTINCT bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL';
             $this->watch->start('sql2');
             $oci->set_query($sql);
             $this->watch->stop('sql2');
             $this->watch->start('fetch2');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
             }
             $this->watch->stop('fetch2');
 
-            if ($ora_par['agencyId']) {
+            if (!empty($ora_par['agencyId'])) {
               foreach ($ora_par['agencyId'] as $agency) {
                 $oci->bind('bind_' . $agency, $agency);
               }
@@ -2290,20 +2372,30 @@ class openAgency extends webServiceServer {
               $oci->bind('bind_j', 'J');
               $filter_bib_type[] = 'vb.best_modt ' . (self::xs_boolean($param->pickupAllowed->_value) ? '=' : '!=') . ':bind_j';
             }
-            if ($param->libraryStatus->_value == 'alle') {
-              $filter_delete = '';
-            } elseif ($param->libraryStatus->_value == 'usynlig') {
-              $oci->bind('bind_u', 'U');
-              $filter_delete = ' AND v.delete_mark = :bind_u';
-            } elseif ($param->libraryStatus->_value == 'slettet') {
-              $oci->bind('bind_s', 'S');
-              $filter_delete = ' AND v.delete_mark = :bind_s';
-            } else {
-              $filter_delete = ' AND v.delete_mark is null';
-            }
-            if ($filter_delete) {
-              $oci->bind('bind_n', 'N');
-              $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+            switch ($param->libraryStatus->_value) {
+              case 'alle': 
+                $filter_delete = '';
+                break;
+              case 'usynlig': 
+                $oci->bind('bind_u', 'U');
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark = :bind_u';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+                break;
+              case 'slettet': 
+                $oci->bind('bind_s', 'S');
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark = :bind_s';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
+                break;
+              case 'aktive': 
+                $oci->bind('bind_u', 'U');
+                $filter_delete = ' AND (v.delete_mark is null OR v.delete_mark = :bind_u)';
+                break;
+              default: 
+                $oci->bind('bind_n', 'N');
+                $filter_delete = ' AND v.delete_mark is null';
+                $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
             }
             $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, v.leder, v.titel,
                           v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark, v.p_nr, v.uni_c_nr, 
@@ -2321,28 +2413,39 @@ class openAgency extends webServiceServer {
                           bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf,
                           kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user, kat.ncip_renew, 
                           kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn, kat.url_viderestil, kat.url_bib_kat
-                     FROM vip v, vip_vsn vsn, vip_beh vb, vip_danbib vd, vip_txt txt, vip_txt_eng eng, 
-                          vip_bogbus_holdeplads hold, vip_bestil bestil, vip_kat kat
-                    WHERE v.kmd_nr IN (SELECT UNIQUE vsn.bib_nr
-                                         FROM vip_vsn vsn, vip v, vip_sup vs
-                                        WHERE ' . $filter_delete_vsn . ' v.kmd_nr = vsn.bib_nr ' .
-                                              ($filter_bib_type ? ' AND ' . implode(' AND ', $filter_bib_type) : '') . ')
+                     FROM vip v
+                     LEFT OUTER JOIN vip_vsn vsn
+                       ON v.kmd_nr = vsn.bib_nr
+                     LEFT OUTER JOIN vip_danbib vd
+                       ON v.bib_nr = vd.bib_nr
+                     LEFT OUTER JOIN vip_beh vb
+                       ON v.bib_nr = vb.bib_nr
+                     LEFT OUTER JOIN vip_txt txt
+                       ON v.bib_nr = txt.bib_nr
+                     LEFT OUTER JOIN vip_bogbus_holdeplads hold
+                       ON v.bib_nr = hold.bib_nr
+                     LEFT OUTER JOIN vip_txt_eng eng
+                       ON v.bib_nr = eng.bib_nr
+                     LEFT OUTER JOIN vip_bestil bestil
+                       ON v.bib_nr = bestil.bib_nr
+                     LEFT OUTER JOIN vip_kat kat
+                       ON v.bib_nr = kat.bib_nr
+                     LEFT OUTER JOIN vip_sup sup
+                       ON v.bib_nr = sup.bib_nr 
+                    WHERE v.kmd_nr IN (
+                          SELECT DISTINCT vsn.bib_nr
+                            FROM vip_vsn vsn, vip v, vip_sup vs
+                           WHERE ' . $filter_delete_vsn . ' v.kmd_nr = vsn.bib_nr ' . ($filter_bib_type ? '
+                             AND ' . implode(' AND ', $filter_bib_type) : '') . ')
                           ' . $filter_delete . '
                           ' . $filter_filial . '
-                      AND v.bib_nr = vb.bib_nr (+)
-                      AND v.bib_nr = vd.bib_nr (+)
-                      AND v.bib_nr = txt.bib_nr (+)
-                      AND v.bib_nr = hold.bib_nr (+)
-                      AND v.bib_nr = eng.bib_nr (+)
-                      AND v.bib_nr = bestil.bib_nr (+)
-                      AND v.bib_nr = kat.bib_nr (+)
-                      AND v.kmd_nr = vsn.bib_nr (+)
                     ORDER BY v.kmd_nr, v.bib_nr';
             $this->watch->start('sql3');
             $oci->set_query($sql);
             $this->watch->stop('sql3');
             $this->watch->start('fetch3');
-            while ($row = $oci->fetch_into_assoc()) {
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
               if ($ora_par['agencyId']) {
                 $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
                 if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
@@ -2441,7 +2544,8 @@ class openAgency extends webServiceServer {
       $this->watch->stop('sql');
       $this->watch->start('fetch');
       $ip_list = array();
-      while ($row = $oci->fetch_into_assoc()) {
+      $rows = $oci->fetch_all_into_assoc();
+      foreach ($rows as $row) {
         $texts[$row['BIB_NR']][] = $row;
       }
       $this->watch->stop('fetch');
@@ -2496,13 +2600,14 @@ class openAgency extends webServiceServer {
           $oci->bind('bind_bib_nr', $agency);
           $and_query .= ' AND bib_nr = :bind_bib_nr';
         }
-        $sql = 'SELECT unique bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL' . $and_query;
+        $sql = 'SELECT DISTINCT bib_nr, domain FROM user_domains WHERE DELETE_DATE IS NULL' . $and_query;
         $this->watch->start('sql');
         $oci->set_query($sql);
         $this->watch->stop('sql');
         $this->watch->start('fetch');
         $ip_list = array();
-        while ($row = $oci->fetch_into_assoc()) {
+        $rows = $oci->fetch_all_into_assoc();
+        foreach ($rows as $row) {
           $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
         }
         $this->watch->stop('fetch');
@@ -2553,6 +2658,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
+      $sql_add = NULL;
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -2574,21 +2680,22 @@ class openAgency extends webServiceServer {
             $oci->set_query('SELECT DISTINCT *
                                FROM broend_to_kilder
                               WHERE searchable = :bind_y
-                              ORDER BY upper(name)');
+                              ORDER BY name');
             $kilder = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql1');
             $oci->bind('bind_agency', $agency);
-            if ($profile = strtolower($param->profileName->_value)) {
+            if ($profile = mb_strtolower($param->profileName->_value)) {
               $oci->bind('bind_profile', $profile);
               $sql_add = ' AND lower(broend_to_profiler.name) = :bind_profile';
             }
             $this->watch->start('sql2');
             $oci->set_query('SELECT broendkilde_id, profil_id, name, add_to_query
-                               FROM broendprofil_to_kilder, broend_to_profiler
+                               FROM broend_to_profiler
+                               LEFT OUTER JOIN broendprofil_to_kilder
+                                 ON broendprofil_to_kilder.profil_id = broend_to_profiler.id_nr
                               WHERE broend_to_profiler.bib_nr = :bind_agency
                                 AND broendprofil_to_kilder.broendkilde_id IS NOT NULL
-                                AND broendprofil_to_kilder.profil_id IS NOT NULL
-                                AND broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id (+)' . $sql_add);
+                                AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
             $profil_res = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql2');
             $profiler = array();
@@ -2608,7 +2715,7 @@ class openAgency extends webServiceServer {
                                      FROM broend_relation, broend_kilde_relation, broend_profil_kilde_relation
                                     WHERE broend_kilde_relation.broendkilde_id = :bind_kilde_id 
                                       AND broend_profil_kilde_relation.profil_id = :bind_profil_id 
-                                      AND broend_profil_kilde_relation.kilde_relation_id =  broend_kilde_relation.id_nr 
+                                      AND broend_profil_kilde_relation.kilde_relation_id = broend_kilde_relation.id_nr 
                                       AND broend_kilde_relation.relation_id = broend_relation.id_nr');
                   $relations = $oci->fetch_all_into_assoc();
                   $this->watch->stop('sql3');
@@ -2648,7 +2755,7 @@ class openAgency extends webServiceServer {
           }
         } else {
           $oci->bind('bind_agency', $agency);
-          if ($profile = strtolower($param->profileName->_value)) {
+          if ($profile = mb_strtolower($param->profileName->_value)) {
             $oci->bind('bind_profile', $profile);
             $sql_add = ' AND lower(broendprofiler.name) = :bind_profile';
           }
@@ -2663,7 +2770,7 @@ class openAgency extends webServiceServer {
             $this->watch->start('fetch4');
             while ($s_row = $oci->fetch_into_assoc()) {
               Object::set_value($s, 'sourceName', $s_row['NAME']);
-              Object::set_value($s, 'sourceOwner', (strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
+              Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
               Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
               Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
               Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
@@ -2734,39 +2841,43 @@ class openAgency extends webServiceServer {
                                   fjernadgang.faust,
                                   fjernadgang.url,
                                   autolink
-                             FROM fjernadgang, fjernadgang_licenser, fjernadgang_dbc, fjernadgang_andre, licensguide
+                             FROM fjernadgang
+                             LEFT OUTER JOIN fjernadgang_licenser
+                               ON fjernadgang_licenser.faust = fjernadgang.faust
+                             LEFT OUTER JOIN fjernadgang_dbc
+                               ON fjernadgang_dbc.faust = fjernadgang.faust
+                             LEFT OUTER JOIN fjernadgang_andre
+                               ON fjernadgang_andre.faust = fjernadgang.faust
+                             LEFT OUTER JOIN licensguide
+                               ON licensguide.bib_nr = fjernadgang.bib_nr
                             WHERE fjernadgang.bib_nr = :bind_agency
-                              AND fjernadgang.type = :bind_har_adgang
-                              AND fjernadgang.faust = fjernadgang_licenser.faust (+)
-                              AND fjernadgang.faust = fjernadgang_dbc.faust (+)
-                              AND fjernadgang.faust = fjernadgang_andre.faust (+)
-                              AND fjernadgang.bib_nr = licensguide.bib_nr (+)');
+                              AND fjernadgang.type = :bind_har_adgang');
           $buf = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           Object::set_value($res, 'agencyId', $param->agencyId->_value);
           foreach ($buf as $val) {
-            if ($help = $val['licens_navn']) {
+            if ($help = $val['LICENS_NAVN']) {
               Object::set_value($s, 'name', $help);
               if ($val['AUTOLINK']) {
                 Object::set_value($s, 'url', $val['AUTOLINK']);
               }
               else {
-                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['licens_url']));
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
               }
             }
-            elseif ($help = $val['dbc_navn']) {
+            elseif ($help = $val['DBC_NAVN']) {
               Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['dbc_url']));
+              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
             }
-            elseif ($help = $val['andre_navn']) {
+            elseif ($help = $val['ANDRE_NAVN']) {
               Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['andre_url']));
+              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
             }
             if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
               if ($val['URL'])
                 Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
               else
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['licens_url'], $s->url->_value));
+                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
               Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
               Object::set_array_value($res, 'subscription', $s);
             }
@@ -2812,7 +2923,7 @@ class openAgency extends webServiceServer {
       $this->watch->start('entry');
       $res = self::get_prioritized_agency_list($agency, 'laaneveje');
     }
-    //var_dump($res); var_dump($param); die();
+    // var_dump($res); var_dump($param); die();
     Object::set_value($ret, 'requestOrderResponse', $res);
     $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
     if (empty($res->error)) $this->cache->set($cache_key, $ret);
@@ -2863,21 +2974,21 @@ class openAgency extends webServiceServer {
    *
    * @param string $credentials 
    * @param object $error 
-   * @retval object  - oci object
+   * @retval object  - psql object
    */
   private function connect($credentials, $line, &$error) {
-    $oci = new Oci($credentials);
-    $oci->set_charset('UTF8');
+    $psql = new psqlClass($credentials);
+    $psql->set_charset('UTF8');
     $this->watch->start('connect');
     try {
-      $oci->connect();
+      $psql->connect();
     }
-    catch (ociException $e) {
-      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: OCI connect error: ' . $oci->get_error_string());
+    catch (fetException $e) {
+      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: psql connect error: ' . $psql->get_error_string());
       Object::set_value($error, 'error', 'service_unavailable');
     }
     $this->watch->stop('connect');
-    return $oci;
+    return $psql;
   }
 
   /** \brief change 18626 to iso18626 and leaves rest unchanged
@@ -2928,14 +3039,16 @@ class openAgency extends webServiceServer {
     $oci->bind('bind_agency', $agency);
     $this->watch->start('sql1');
     $oci->set_query('SELECT vilse 
-                       FROM vip, ' . $table_name . '
-                      WHERE vip.' . $column . ' = bibliotek
+                       FROM ' . $table_name . '
+                       JOIN vip
+                         ON vip.' . $column . ' = ' . $table_name . '.bibliotek
                         AND vip.bib_nr = :bind_agency
                       ORDER BY prionr DESC');
     $this->watch->stop('sql1');
     $this->watch->start('fetch');
-    while ($s_row = $oci->fetch_into_assoc()) {
-      Object::set_array_value($res, 'agencyId', $s_row['VILSE']);
+    $rows = $oci->fetch_all_into_assoc();
+    foreach ($rows as $row) {
+      Object::set_array_value($res, 'agencyId', $row['VILSE']);
     }
     $this->watch->stop('fetch');
     return $res;
@@ -3137,7 +3250,6 @@ class openAgency extends webServiceServer {
       Object::set_value($pickupAgency, 'willReceiveIll', '0');
       Object::set_value($pickupAgency, 'willReceiveIllTxt', $row['BEST_TXT'], FALSE);
     }
-
     return;
   }
 
@@ -3198,7 +3310,7 @@ class openAgency extends webServiceServer {
   private function value_and_language($val, $lang) {
     $ret = new stdClass();
     $ret->_value = $val;
-    Object::set_value($ret->_attributes, 'language', $lang);
+    Object::set_value($ret->_attributes, 'oa:language', $lang);
     return $ret;
   }
 
@@ -3236,7 +3348,7 @@ class openAgency extends webServiceServer {
    * @return true if xs:boolean is so
    */
   private function xs_boolean($str) {
-    return (strtolower($str) == 'true' || $str == 1);
+    return (mb_strtolower($str) == 'true' || $str == 1);
   }
 
   /** \brief
@@ -3258,16 +3370,15 @@ class openAgency extends webServiceServer {
       return $mix->_value;
   }
 
-  /** \brief makes a regular expression to match single_words in the DB, using ? as truncation
+  /** \brief makes a SIMILAR TO expression to match single_words in the DB, using '_' as truncation
    *
-   * select navn from vip where regexp_like(navn, '[ ,.;:]bibliotek[ .,;:$]');
-   * select bib_nr, navn from vip where regexp_like(lower(navn), '(^|[ ,.;:])krystal[a-zæøå]*([ .,;:]|$)');
+   * select foo from bar where foo SIMILAR TO build_PostgreSQL_like($par);
    *
    * @param par (string) the string to eventually locate in the DB 
-   * @return (string) the DB like expression
+   * @return (string) the DB SIMILAR TO expression
    */
-  private function build_regexp_like($par) {
-    return '(^|[ ,.;:])' . str_replace('?', '[a-zæøå0-9]*', $par) . '([ .,;:]|$)';
+  private function build_PostgreSQL_like($par) {
+    return '%' . mb_strtolower(preg_replace('/[^a-zæøåA-ZÆØÅ0-9\-\_\s]/', '_', $par)) . '%';
   }
 
   /** \brief alters the timeout for cahce invalidation

@@ -91,7 +91,7 @@ logfile = php://stdout
 ;   TRACE   - program trace
 ;   DEBUG   - debugging info
 ;   Z3959   - calls to z3950 services
-;   OCI     - oracle
+;   OCI     - postgres
 verbose = @VERBOSE_LEVEL@
 
 ; format for automatic timer dump %s is the operation used
@@ -99,7 +99,7 @@ dump_timer = openAgency(%s)
 
 ; --------------
 ;agency_credentials = some_user/some_pwd@some.server.dbc.dk
-agency_credentials = @VIP_ORACLE_LOGIN@
+agency_credentials = @VIP_PG_LOGIN@
 
 ; --------------
 ; table for automatic interlibrary loan setting of material owned by the library
@@ -130,7 +130,7 @@ cache_expire = 7200
 ; each operation can be set to cache differently by setting cache_operation[operation] specifically
 ; like:
 ;   cache_operation_expire[automation] = 600
-; the operations can be found in soapAction. 
+; the operations can be found in soapAction.
 ; if cache_operation_expire is not set for operation(s), the cache_expire above will be used
 
 ; ==============

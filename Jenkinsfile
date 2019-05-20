@@ -39,6 +39,7 @@ pipeline {
                             println("Using branch_name ${BRANCH_NAME}")
                             imageLabel = BRANCH_NAME.split(/\//)[-1]
                             imageLabel = imageLabel.toLowerCase()
+                            imageLabel = imageLabel + "-" + env.BUILD_NUMBER
                         } else {
                             println(" Using Master branch ${BRANCH_NAME}")
                         }

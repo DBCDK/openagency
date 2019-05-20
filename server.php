@@ -30,20 +30,12 @@ require_once 'OLS_class_lib/memcache_class.php';
 require_once("OLS_class_lib/pg_wrapper_class.php");
 
 // Default Oracle datatype used for bindings. Defined in PHP OCI database extension.
-// Added here to avoid PHP log notices. 
+// Added here to avoid PHP log notices.
 define('SQLT_CHR', NULL);
 
 class openAgency extends webServiceServer {
   protected $cache;
   protected $cache_expire = array();
-
-public function log_to_file($text, $header = null) {
-  $file = '/home/jgn/debug.txt';
-  $header = !empty($header) ? $header . ' -> ' : null;
-  $f = fopen($file, 'a');
-  fwrite($f, date('Ymd H:i:s - ') . $header . print_r($text, 1) . "\n");
-  fclose($f);
-}
 
   public function __construct() {
     webServiceServer::__construct('openagency.ini');
@@ -278,7 +270,7 @@ public function log_to_file($text, $header = null) {
           $this->watch->start('sql1');
           $oci->set_query('SELECT fa.faust, f.bib_nr, vv.navn
                              FROM fjernadgang_andre fa, fjernadgang f, vip_vsn vv, vip v
-                            WHERE lower(fa.navn) = :bind_navn 
+                            WHERE lower(fa.navn) = :bind_navn
                               AND vv.bib_nr = f.bib_nr
                               AND v.bib_nr = f.bib_nr
                               AND (v.delete_mark is null OR v.delete_mark = :bind_u)
@@ -501,7 +493,7 @@ public function log_to_file($text, $header = null) {
           $oci->bind('bind_agency', $agency);
           $oci->bind('bind_deleted', 'deleted');
           $this->watch->start('sql1');
-          $oci->set_query('SELECT * FROM vip_culr_profile 
+          $oci->set_query('SELECT * FROM vip_culr_profile
                             WHERE bib_nr = :bind_agency AND typeofclient != :bind_deleted');
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
@@ -558,12 +550,12 @@ public function log_to_file($text, $header = null) {
       Object::set_value($res, 'error', 'authentication_error');
     else {
       $agency = self::strip_agency($param->agencyId->_value);
-      $cache_key = 'OA_getRI' . 
-                   $this->config->get_inifile_hash() . 
-                   $agency . 
-                   $param->agencyName->_value . 
-                   $param->lastUpdated->_value . 
-                   $param->libraryType->_value . 
+      $cache_key = 'OA_getRI' .
+                   $this->config->get_inifile_hash() .
+                   $agency .
+                   $param->agencyName->_value .
+                   $param->lastUpdated->_value .
+                   $param->libraryType->_value .
                    $param->libraryStatus->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -623,14 +615,14 @@ public function log_to_file($text, $header = null) {
             $sqls[] = '(v.delete_mark is null OR v.delete_mark = :bind_u)';
           }
           $filter_sql = implode(' AND ', $sqls);
-          $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, 
+          $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr,
                         v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark,
-                        v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.p_nr, v.uni_c_nr, 
-                        v.leder, v.titel, v.leder_samarb,  v.titel_samarb, v.latitude, v.longitude, 
+                        v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.p_nr, v.uni_c_nr,
+                        v.leder, v.titel, v.leder_samarb,  v.titel_samarb, v.latitude, v.longitude,
                         TO_CHAR(v.dato, \'YYYY-MM-DD\') dato, TO_CHAR(v.bs_dato, \'YYYY-MM-DD\') bs_dato,
                         vsn.navn vsn_navn, vsn.bib_nr vsn_bib_nr, vsn.bib_type vsn_bib_type,
-                        vsn.email vsn_email, vsn.tlf_nr vsn_tlf_nr, vsn.fax_nr vsn_fax_nr, 
-                        TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, vsn.oclc_symbol, 
+                        vsn.email vsn_email, vsn.tlf_nr vsn_tlf_nr, vsn.fax_nr vsn_fax_nr,
+                        TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, vsn.oclc_symbol,
                         vsn.cvr_nr vsn_cvr_nr, vsn.p_nr vsn_p_nr, vsn.ean_nummer vsn_ean_nummer,
                         vsn.leder vsn_leder, vsn.titel vsn_titel, vsn.sb_kopibestil,
                         vb.best_modt, vb.best_modt_luk, vb.best_modt_luk_eng,
@@ -640,9 +632,9 @@ public function log_to_file($text, $header = null) {
                         kat.ncip_renew, kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn,
                         vd.mailbestil_via, vd.url_itemorder_bestil, vd.zbestil_groupid, vd.zbestil_userid, vd.zbestil_passw,
                         vd.holdingsformat, vd.svar_email, vd.best_txt,
-                        ors.shipping ors_shipping, ors.cancel ors_cancel, ors.answer ors_answer, 
+                        ors.shipping ors_shipping, ors.cancel ors_cancel, ors.answer ors_answer,
                         ors.cancelreply ors_cancelreply, ors.cancel_answer_synchronic ors_cancel_answer_synchronic,
-                        ors.renew ors_renew, ors.renewanswer ors_renewanswer, 
+                        ors.renew ors_renew, ors.renewanswer ors_renewanswer,
                         ors.renew_answer_synchronic ors_renew_answer_synchronic,
                         ors.iso18626_address, ors.iso18626_password
                    FROM vip v
@@ -663,9 +655,9 @@ public function log_to_file($text, $header = null) {
                    LEFT OUTER JOIN vip_kat kat
                      ON v.bib_nr = kat.bib_nr
                    LEFT OUTER JOIN vip_sup sup
-                     ON v.bib_nr = sup.bib_nr 
+                     ON v.bib_nr = sup.bib_nr
                    LEFT OUTER JOIN open_agency_ors ors
-                     ON v.bib_nr = ors.bib_nr 
+                     ON v.bib_nr = ors.bib_nr
                   WHERE ' . $filter_sql . '
                   ORDER BY vsn.bib_nr ASC, v.bib_nr ASC';
           $this->watch->start('sql1');
@@ -753,10 +745,10 @@ public function log_to_file($text, $header = null) {
           $fb_licens = 'fb_licens';
           $oci->bind('bind_fb_licens', $fb_licens);
           $this->watch->start('sql1');
-          $oci->set_query('SELECT ud.bib_nr, domain, proxyurl 
+          $oci->set_query('SELECT ud.bib_nr, domain, proxyurl
                              FROM user_domains ud
                            LEFT OUTER JOIN licensguide lg
-                             ON lg.bib_nr = ud.bib_nr 
+                             ON lg.bib_nr = ud.bib_nr
                            WHERE ' . $where . ' origin_source = :bind_fb_licens
                            ORDER BY bib_nr');
           $this->watch->stop('sql1');
@@ -851,7 +843,7 @@ public function log_to_file($text, $header = null) {
           $oci->set_query('SELECT broendkilde_id, profil_id, name, broend_to_profiler.bib_nr
                              FROM broendprofil_to_kilder
                              LEFT OUTER JOIN broend_to_profiler
-                               ON broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id 
+                               ON broend_to_profiler.id_nr = broendprofil_to_kilder.profil_id
                             WHERE broendprofil_to_kilder.broendkilde_id IS NOT NULL
                               AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
           $profil_res = $oci->fetch_all_into_assoc();
@@ -879,8 +871,8 @@ public function log_to_file($text, $header = null) {
                   $res_profile[] = $p;
                   unset($p);
                   unset($source);
-                } 
-              } 
+                }
+              }
             }
             if ($res_profile) {
               Object::set_value($a, 'agencyId', $agency);
@@ -1013,7 +1005,7 @@ public function log_to_file($text, $header = null) {
             if ($vv_row) {
               $oci->bind('bind_bib_nr', $help);
               $this->watch->start('sql3');
-              $oci->set_query('SELECT vilse 
+              $oci->set_query('SELECT vilse
                                  FROM vip, laaneveje
                                 WHERE (vip.kmd_nr = bibliotek OR vip.bib_nr = bibliotek)
                                   AND vip.bib_nr = :bind_bib_nr
@@ -1027,7 +1019,7 @@ public function log_to_file($text, $header = null) {
               $this->watch->start('fetch3');
               $this->watch->stop('sql3');
               if (count($vv_row) <> count($consortia)) {
-                VerboseJson::log(ERROR, 'OpenAgency('.__LINE__.'):: agency ' . $agency . 
+                VerboseJson::log(ERROR, 'OpenAgency('.__LINE__.'):: agency ' . $agency .
                     ' has libraries in VIP_VIDERESTIL not found in LAANEVEJE');
               }
             }
@@ -1243,7 +1235,7 @@ public function log_to_file($text, $header = null) {
             case 'orsRecall':
               $orsR = &$res->orsRecall->_value;
               Object::set_value($orsR, 'responder', self::normalize_agency($oa_row['OAO.BIB_NR']));
-              if (($oa_row['MAILBESTIL_VIA'] == 'E') || 
+              if (($oa_row['MAILBESTIL_VIA'] == 'E') ||
                  (($oa_row['MAILBESTIL_VIA'] == 'D') && $oa_row['ISO18626_ADDRESS'])) {
                 self::fill_iso18626_protocol($orsR, $oa_row);
               }
@@ -1297,7 +1289,7 @@ public function log_to_file($text, $header = null) {
             case 'orsRenew':
               $orsR = &$res->orsRenew->_value;
               Object::set_value($orsR, 'responder', self::normalize_agency($oa_row['OAO.BIB_NR']));
-              if (($oa_row['MAILBESTIL_VIA'] == 'E') || 
+              if (($oa_row['MAILBESTIL_VIA'] == 'E') ||
                  (($oa_row['MAILBESTIL_VIA'] == 'D') && $oa_row['ISO18626_ADDRESS'])) {
                 self::fill_iso18626_protocol($orsR, $oa_row);
               }
@@ -1350,7 +1342,7 @@ public function log_to_file($text, $header = null) {
             case 'orsCancel':
               $orsC = &$res->orsCancel->_value;
               Object::set_value($orsC, 'responder', self::normalize_agency($oa_row['OAO.BIB_NR']));
-              if (($oa_row['MAILBESTIL_VIA'] == 'E') || 
+              if (($oa_row['MAILBESTIL_VIA'] == 'E') ||
                  (($oa_row['MAILBESTIL_VIA'] == 'D') && $oa_row['ISO18626_ADDRESS'])) {
                 self::fill_iso18626_protocol($orsC, $oa_row);
               }
@@ -1430,7 +1422,7 @@ public function log_to_file($text, $header = null) {
               $orsSR = &$res->orsStatusRequest->_value;
               Object::set_value($orsSR, 'responder', self::normalize_agency($oa_row['OAO.BIB_NR']));
               Object::set_value($orsSR, 'willReceive', '');
-              if (($oa_row['MAILBESTIL_VIA'] == 'E') || 
+              if (($oa_row['MAILBESTIL_VIA'] == 'E') ||
                  (($oa_row['MAILBESTIL_VIA'] == 'D') && $oa_row['ISO18626_ADDRESS'])) {
                 self::fill_iso18626_protocol($orsSR, $oa_row);
               }
@@ -1481,7 +1473,7 @@ public function log_to_file($text, $header = null) {
               break;
             case 'userOrderParameters':
               $usrOP = &$res->userOrderParameters->_value;
-              $u_fld = array('LD_CPR' => 'cpr', 
+              $u_fld = array('LD_CPR' => 'cpr',
                   'LD_ID' => 'userId',
                   'LD_TXT' => 'customId',
                   'LD_LKST' => 'barcode',
@@ -1603,7 +1595,7 @@ public function log_to_file($text, $header = null) {
                       </open:agencyParameters>
                       </open:userOrderParameters>                        */
 
-              //print_r($oa_row); 
+              //print_r($oa_row);
               //var_dump($res); var_dump($param); die();
               break;
             default:
@@ -1663,7 +1655,7 @@ public function log_to_file($text, $header = null) {
    * - - temporarilyClosed
    * - - temporarilyClosedReason
    * - - pickupAllowed *
-   * - - and more - see the xsd for all 
+   * - - and more - see the xsd for all
    * - or
    * - - error
    */
@@ -1678,19 +1670,19 @@ public function log_to_file($text, $header = null) {
         $distanceInMeter = (!empty($param->distanceInMeter)) ? $geoloc->distanceInMeter->_value : NULL;
         $geo_cache = $latitude . '_' . $longitude . '_' . $distanceInMeter;
       }
-      $cache_key = 'OA_FinL_' . 
-        $this->config->get_inifile_hash() . 
-        self::stringiefy($param->agencyId) . '_' . 
-        self::stringiefy($param->agencyName) . '_' . 
-        self::stringiefy($param->agencyAddress) . '_' . 
-        self::stringiefy($param->postalCode) . '_' . 
-        self::stringiefy($param->city) . '_' . 
-        self::stringiefy($param->stilNumber) . '_' . 
-        self::stringiefy($param->anyField) . '_' . 
-        self::stringiefy($param->libraryType) . '_' . 
-        self::stringiefy($param->libraryStatus) . '_' . 
-        self::stringiefy($param->pickupAllowed) . '_' . 
-        $geo_cache . '_' . 
+      $cache_key = 'OA_FinL_' .
+        $this->config->get_inifile_hash() .
+        self::stringiefy($param->agencyId) . '_' .
+        self::stringiefy($param->agencyName) . '_' .
+        self::stringiefy($param->agencyAddress) . '_' .
+        self::stringiefy($param->postalCode) . '_' .
+        self::stringiefy($param->city) . '_' .
+        self::stringiefy($param->stilNumber) . '_' .
+        self::stringiefy($param->anyField) . '_' .
+        self::stringiefy($param->libraryType) . '_' .
+        self::stringiefy($param->libraryStatus) . '_' .
+        self::stringiefy($param->pickupAllowed) . '_' .
+        $geo_cache . '_' .
         self::stringiefy($param->sort);
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -1713,7 +1705,7 @@ public function log_to_file($text, $header = null) {
       }
       // agencyAddress
       if (!empty($param->agencyAddress) && $val = $param->agencyAddress->_value) {
-        $sqls[] = '(LOWER(vip.badr) SIMILAR TO :bind_addr' . 
+        $sqls[] = '(LOWER(vip.badr) SIMILAR TO :bind_addr' .
             ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_addr AND vip_sup.type = :bind_a)' .
             ' OR LOWER(vip_vsn.badr) SIMILAR TO upper(:bind_addr))';
         $oci->bind('bind_addr', self::build_PostgreSQL_like($val));
@@ -1726,19 +1718,19 @@ public function log_to_file($text, $header = null) {
         $oci->bind('bind_postnr', self::build_PostgreSQL_like($val));
         $oci->bind('bind_p', 'P');
       }
-      
+
       // city
       if (!empty($param->city) && $val = $param->city->_value) {
         $sqls[] = 'LOWER(vip.bcity) SIMILAR TO :bind_city';
         $oci->bind('bind_city', self::build_PostgreSQL_like($val));
       }
-      
+
       // stilNumber
       if (!empty($param->stilNumber) && $val = $param->stilNumber->_value) {
         $sqls[] = 'vip.uni_c_nr = :bind_uni_c_nr';
         $oci->bind('bind_uni_c_nr', $val);
       }
-      
+
       // anyField
       if (!empty($param->anyField) && $val = $param->anyField->_value) {
         $bib_nr = self::strip_agency($param->anyField->_value);
@@ -1746,7 +1738,7 @@ public function log_to_file($text, $header = null) {
           $oci->bind('bind_bib_nr', $bib_nr);
           $bibnr_sql = '(vip.bib_nr = :bind_bib_nr) OR ';
         }
-        $sqls[] = '(' . $bibnr_sql . 
+        $sqls[] = '(' . $bibnr_sql .
           'LOWER(vip.navn) SIMILAR TO :bind_any' .
           ' OR LOWER(vip.badr) SIMILAR TO :bind_any' .
           ' OR LOWER(vip.bpostnr) SIMILAR TO :bind_any' .
@@ -1759,7 +1751,7 @@ public function log_to_file($text, $header = null) {
         $oci->bind('bind_n', 'N');
         $oci->bind('bind_p', 'P');
       }
-      
+
       // libraryType
       if ((!empty($param->libraryType) && $val = $param->libraryType->_value)
           && ($param->libraryType->_value == 'Folkebibliotek'
@@ -1773,7 +1765,7 @@ public function log_to_file($text, $header = null) {
         $sqls[] = '(vip_vsn.bib_type != :bind_bib_type OR vip_vsn.bib_type IS null)';
         $oci->bind('bind_bib_type', 'Skolebibliotek');
       }
-      
+
       // libraryStatus
       $libraryStatus_sql = 'vip.delete_mark is null';
       if (!empty($param->libraryStatus)) {
@@ -1789,7 +1781,7 @@ public function log_to_file($text, $header = null) {
         }
       }
       $sqls[] = $libraryStatus_sql;
-      
+
       // pickupAllowed
       if (isset($param->pickupAllowed->_value)) {
         $j = 'J';
@@ -1833,7 +1825,7 @@ public function log_to_file($text, $header = null) {
           $deg2meter = 111045;
           $latitude = $geoloc->latitude->_value;
           $longitude = $geoloc->longitude->_value;
-          // Flat earth society: 
+          // Flat earth society:
           //$distance_sql = "$deg2meter * SQRT(POWER(vip.latitude-$latitude,2) + POWER(vip.longitude-$longitude,2)) distance, ";
           // Haversine: https://en.wikipedia.org/wiki/Haversine_formula
           $distance_sql = "$deg2meter * $rad2deg * (ACOS(COS($deg2rad*$latitude) * COS($deg2rad*vip.latitude) * COS($deg2rad*($longitude-vip.longitude)) + SIN($deg2rad*$latitude) * SIN($deg2rad*vip.latitude))) distance, ";
@@ -1846,23 +1838,23 @@ public function log_to_file($text, $header = null) {
         $order_by = 'vip.bib_nr';
       }
 
-      $sql ='SELECT ' . $distance_sql . 'vip.bib_nr, vip.navn, vip.navn_e, vip.navn_k, vip.navn_e_k, vip.type, vip.tlf_nr, vip.email, vip.badr, 
+      $sql ='SELECT ' . $distance_sql . 'vip.bib_nr, vip.navn, vip.navn_e, vip.navn_k, vip.navn_e_k, vip.type, vip.tlf_nr, vip.email, vip.badr,
                     vip.bpostnr, vip.bcity, vip.isil, vip.kmd_nr, vip.url_homepage, vip.url_payment, vip.delete_mark,
                     vip.afsaetningsbibliotek, vip.afsaetningsnavn_k, vip.p_nr, vip.uni_c_nr, vip.leder, vip.titel,
                     TO_CHAR(vip.dato, \'YYYY-MM-DD\') "dato", TO_CHAR(vip.bs_dato, \'YYYY-MM-DD\') "bs_dato",
-                    vip.latitude, vip.longitude, vip.knudepunkt, vip.leder_samarb,  vip.titel_samarb, 
+                    vip.latitude, vip.longitude, vip.knudepunkt, vip.leder_samarb,  vip.titel_samarb,
                     vip_vsn.navn vsn_navn, vip_vsn.bib_nr vsn_bib_nr, vip_vsn.bib_type vsn_bib_type,
-                    vip_vsn.email vsn_email, vip_vsn.tlf_nr vsn_tlf_nr, vip_vsn.fax_nr vsn_fax_nr, 
+                    vip_vsn.email vsn_email, vip_vsn.tlf_nr vsn_tlf_nr, vip_vsn.fax_nr vsn_fax_nr,
                     vip_vsn.leder vsn_leder, vip_vsn.titel vsn_titel, vip_vsn.koerselsordning,
                     TO_CHAR(vip_vsn.dato, \'YYYY-MM-DD\') "vsn_dato", vip_vsn.oclc_symbol, vip_vsn.sb_kopibestil,
                     vip_vsn.cvr_nr vsn_cvr_nr, vip_vsn.p_nr vsn_p_nr, vip_vsn.ean_nummer vsn_ean_nummer,
                     vip_danbib.svar_email, vip_danbib.mailbestil_via, vip_danbib.best_txt,
                     vip_beh.best_modt, vip_beh.best_modt_luk, vip_beh.best_modt_luk_eng,
-                    vip_txt.aabn_tid, vip_txt.kvt_tekst_fjl, vip_txt.service_tekst, 
+                    vip_txt.aabn_tid, vip_txt.kvt_tekst_fjl, vip_txt.service_tekst,
                     vip_txt_eng.aabn_tid_e, vip_txt_eng.kvt_tekst_fjl_e, vip_bogbus_holdeplads.holdeplads,
                     vip_bestil.url_serv_dkl, vip_bestil.support_email, vip_bestil.support_tlf, vip_bestil.ncip_address, vip_bestil.ncip_password,
                     vip_kat.url_best_blanket, vip_kat.url_best_blanket_text, vip_kat.url_laanerstatus, vip_kat.ncip_lookup_user,
-                    vip_kat.ncip_renew, vip_kat.ncip_cancel, vip_kat.ncip_update_request, vip_kat.filial_vsn, 
+                    vip_kat.ncip_renew, vip_kat.ncip_cancel, vip_kat.ncip_update_request, vip_kat.filial_vsn,
                     vip_kat.url_viderestil, vip_kat.url_bib_kat
                FROM vip
                LEFT OUTER JOIN vip_vsn
@@ -1876,9 +1868,9 @@ public function log_to_file($text, $header = null) {
                LEFT OUTER JOIN vip_bogbus_holdeplads
                  ON vip_bogbus_holdeplads.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_txt_eng
-                 ON vip_txt_eng.bib_nrvip.bib_nr
+                 ON vip_txt_eng.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_bestil
-                 ON vip_bestil.bib_nrvip.bib_nr
+                 ON vip_bestil.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_kat
                  ON vip_kat.bib_nr = vip.bib_nr
                LEFT OUTER JOIN vip_sup
@@ -1917,7 +1909,7 @@ public function log_to_file($text, $header = null) {
         $this->watch->stop('sql1');
         VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
         Object::set_value($res, 'error', 'service_unavailable');
-      } 
+      }
       $this->watch->stop('sql1');
     }
     //var_dump($res); var_dump($param); die();
@@ -1942,7 +1934,7 @@ public function log_to_file($text, $header = null) {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
-      $cache_key = 'OA_libRu_' . $this->config->get_inifile_hash() . $param->agencyId->_value . md5(json_encode($param->libraryRule)); 
+      $cache_key = 'OA_libRu_' . $this->config->get_inifile_hash() . $param->agencyId->_value . md5(json_encode($param->libraryRule));
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
@@ -1964,7 +1956,7 @@ public function log_to_file($text, $header = null) {
             }
             else if ($param->libraryRule) {
               $oci->bind('bind_u', 'U');
-              $and_bib = ' AND (vip.delete_mark is null OR vip.delete_mark = :bind_u)';    // drop deleted 
+              $and_bib = ' AND (vip.delete_mark is null OR vip.delete_mark = :bind_u)';    // drop deleted
               $lib_rule = is_array($param->libraryRule) ? $param->libraryRule : array($param->libraryRule);
               $rules = $binds = array();
               foreach ($lib_rule as $idx => $rule) {
@@ -1987,11 +1979,11 @@ public function log_to_file($text, $header = null) {
               }
             }
             $this->watch->start('sql1');
-            $oci->set_query('SELECT vip_vsn.bib_type, vip_library_rules.* 
+            $oci->set_query('SELECT vip_vsn.bib_type, vip_library_rules.*
                                FROM vip_library_rules, vip
                                LEFT OUTER JOIN vip_vsn
                                  ON vip.kmd_nr = vip_vsn.bib_nr
-                              WHERE vip.bib_nr = vip_library_rules.bib_nr ' . $and_bib . ' 
+                              WHERE vip.bib_nr = vip_library_rules.bib_nr ' . $and_bib . '
                               ORDER BY vip_library_rules.bib_nr ASC');
             $this->watch->stop('sql1');
             //$mem = memory_get_usage();
@@ -2241,15 +2233,15 @@ public function log_to_file($text, $header = null) {
           }
         }
       }
-      $cache_key = 'OA_picAL_' . 
-        $this->config->get_inifile_hash() . 
-        (is_array($ora_par['agencyId']) ? implode('', $ora_par['agencyId']) : '') . 
-        (is_array($ora_par['agencyName']) ? implode('', $ora_par['agencyName']) : '') . 
-        (is_array($ora_par['agencyAddress']) ? implode('', $ora_par['agencyAddress']) : '') . 
-        (is_array($ora_par['postalCode']) ? implode('', $ora_par['postalCode']) : '') . 
-        (is_array($ora_par['city']) ? implode('', $ora_par['city']) : '') . 
-        $param->pickupAllowed->_value . 
-        $param->libraryStatus->_value . 
+      $cache_key = 'OA_picAL_' .
+        $this->config->get_inifile_hash() .
+        (is_array($ora_par['agencyId']) ? implode('', $ora_par['agencyId']) : '') .
+        (is_array($ora_par['agencyName']) ? implode('', $ora_par['agencyName']) : '') .
+        (is_array($ora_par['agencyAddress']) ? implode('', $ora_par['agencyAddress']) : '') .
+        (is_array($ora_par['postalCode']) ? implode('', $ora_par['postalCode']) : '') .
+        (is_array($ora_par['city']) ? implode('', $ora_par['city']) : '') .
+        $param->pickupAllowed->_value .
+        $param->libraryStatus->_value .
         $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -2373,45 +2365,45 @@ public function log_to_file($text, $header = null) {
               $filter_bib_type[] = 'vb.best_modt ' . (self::xs_boolean($param->pickupAllowed->_value) ? '=' : '!=') . ':bind_j';
             }
             switch ($param->libraryStatus->_value) {
-              case 'alle': 
+              case 'alle':
                 $filter_delete = '';
                 break;
-              case 'usynlig': 
+              case 'usynlig':
                 $oci->bind('bind_u', 'U');
                 $oci->bind('bind_n', 'N');
                 $filter_delete = ' AND v.delete_mark = :bind_u';
                 $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
                 break;
-              case 'slettet': 
+              case 'slettet':
                 $oci->bind('bind_s', 'S');
                 $oci->bind('bind_n', 'N');
                 $filter_delete = ' AND v.delete_mark = :bind_s';
                 $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
                 break;
-              case 'aktive': 
+              case 'aktive':
                 $oci->bind('bind_u', 'U');
                 $filter_delete = ' AND (v.delete_mark is null OR v.delete_mark = :bind_u)';
                 break;
-              default: 
+              default:
                 $oci->bind('bind_n', 'N');
                 $filter_delete = ' AND v.delete_mark is null';
                 $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
             }
             $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, v.leder, v.titel,
-                          v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark, v.p_nr, v.uni_c_nr, 
-                          v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.leder_samarb,  v.titel_samarb, 
-                          v.latitude, v.longitude, 
+                          v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark, v.p_nr, v.uni_c_nr,
+                          v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.leder_samarb,  v.titel_samarb,
+                          v.latitude, v.longitude,
                           TO_CHAR(v.dato, \'YYYY-MM-DD\') dato, TO_CHAR(v.bs_dato, \'YYYY-MM-DD\') bs_dato,
-                          TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato, 
+                          TO_CHAR(vsn.dato, \'YYYY-MM-DD\') vsn_dato,
                           vsn.oclc_symbol, vsn.sb_kopibestil, vsn.koerselsordning,
                           vsn.leder vsn_leder, vsn.titel vsn_titel, vsn.ean_nummer,
                           vb.best_modt, vb.best_modt_luk, vb.best_modt_luk_eng, vd.best_txt,
-                          vd.svar_email, vd.mailbestil_via, 
+                          vd.svar_email, vd.mailbestil_via,
                           txt.aabn_tid, txt.kvt_tekst_fjl, txt.service_tekst,
-                          eng.aabn_tid_e, eng.kvt_tekst_fjl_e, 
+                          eng.aabn_tid_e, eng.kvt_tekst_fjl_e,
                           hold.holdeplads,
                           bestil.url_serv_dkl, bestil.support_email, bestil.support_tlf,
-                          kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user, kat.ncip_renew, 
+                          kat.url_best_blanket, kat.url_best_blanket_text, kat.url_laanerstatus, kat.ncip_lookup_user, kat.ncip_renew,
                           kat.ncip_cancel, kat.ncip_update_request, kat.filial_vsn, kat.url_viderestil, kat.url_bib_kat
                      FROM vip v
                      LEFT OUTER JOIN vip_vsn vsn
@@ -2431,7 +2423,7 @@ public function log_to_file($text, $header = null) {
                      LEFT OUTER JOIN vip_kat kat
                        ON v.bib_nr = kat.bib_nr
                      LEFT OUTER JOIN vip_sup sup
-                       ON v.bib_nr = sup.bib_nr 
+                       ON v.bib_nr = sup.bib_nr
                     WHERE v.kmd_nr IN (
                           SELECT DISTINCT vsn.bib_nr
                             FROM vip_vsn vsn, vip v, vip_sup vs
@@ -2514,7 +2506,7 @@ public function log_to_file($text, $header = null) {
     if (empty($res->error)) $this->cache->set($cache_key, $ret);
     $this->watch->stop('entry');
     return $ret;
-  } 
+  }
 
 
   /** \brief return a list of texts for BOB
@@ -2573,7 +2565,7 @@ public function log_to_file($text, $header = null) {
   /** \brief return a list of ip-adresses
    * Request:
    * - agencyId
-   * - domain 
+   * - domain
    */
   public function domainList($param) {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
@@ -2639,8 +2631,8 @@ public function log_to_file($text, $header = null) {
    *
    * Request:
    * - agencyId
-   * - profileName: 
-   * - profileVersion: 
+   * - profileName:
+   * - profileVersion:
    * Response:
    * - profile
    * - - profileName
@@ -2713,9 +2705,9 @@ public function log_to_file($text, $header = null) {
                   $this->watch->start('sql3');
                   $oci->set_query('SELECT DISTINCT rdf, rdf_reverse
                                      FROM broend_relation, broend_kilde_relation, broend_profil_kilde_relation
-                                    WHERE broend_kilde_relation.broendkilde_id = :bind_kilde_id 
-                                      AND broend_profil_kilde_relation.profil_id = :bind_profil_id 
-                                      AND broend_profil_kilde_relation.kilde_relation_id = broend_kilde_relation.id_nr 
+                                    WHERE broend_kilde_relation.broendkilde_id = :bind_kilde_id
+                                      AND broend_profil_kilde_relation.profil_id = :bind_profil_id
+                                      AND broend_profil_kilde_relation.kilde_relation_id = broend_kilde_relation.id_nr
                                       AND broend_kilde_relation.relation_id = broend_relation.id_nr');
                   $relations = $oci->fetch_all_into_assoc();
                   $this->watch->stop('sql3');
@@ -2798,7 +2790,7 @@ public function log_to_file($text, $header = null) {
   }
 
 
-  /** \brief Fetch information about remote access 
+  /** \brief Fetch information about remote access
    *
    * Request:
    * - agencyId
@@ -2972,8 +2964,8 @@ public function log_to_file($text, $header = null) {
 
   /** \brief get a oci connection
    *
-   * @param string $credentials 
-   * @param object $error 
+   * @param string $credentials
+   * @param object $error
    * @retval object  - psql object
    */
   private function connect($credentials, $line, &$error) {
@@ -2993,8 +2985,8 @@ public function log_to_file($text, $header = null) {
 
   /** \brief change 18626 to iso18626 and leaves rest unchanged
    *
-   * @param string $protocol 
-   * @retval string 
+   * @param string $protocol
+   * @retval string
    */
   private function normalize_iso18626($protocol) {
     return ($protocol == '18626' ? 'iso18626' : $protocol);
@@ -3002,7 +2994,7 @@ public function log_to_file($text, $header = null) {
 
   /** \brief get a priority list from some table
    *
-   * @param string $agency 
+   * @param string $agency
    * @param string $table_name - must contain columns: bibliotek, vilse and prionr
    * @retval array - of agencies
    */
@@ -3030,7 +3022,7 @@ public function log_to_file($text, $header = null) {
   /** \brief get a priority list from some table
    *
    * @param ressource $oci
-   * @param string $agency 
+   * @param string $agency
    * @param string $table_name - must contain columns: bibliotek, vilse and prionr
    * @param string $column - the column to select from, kmd_nr or bib_nr
    * @retval array - of agencies
@@ -3038,7 +3030,7 @@ public function log_to_file($text, $header = null) {
   private function get_vilse($oci, $agency, $table_name, $column) {
     $oci->bind('bind_agency', $agency);
     $this->watch->start('sql1');
-    $oci->set_query('SELECT vilse 
+    $oci->set_query('SELECT vilse
                        FROM ' . $table_name . '
                        JOIN vip
                          ON vip.' . $column . ' = ' . $table_name . '.bibliotek
@@ -3127,7 +3119,7 @@ public function log_to_file($text, $header = null) {
     }
   }
 
-  /** \brief parse status and status_eget from vip_fjernlaan 
+  /** \brief parse status and status_eget from vip_fjernlaan
    *
    * @param status (char) - single character status to translate
    * @return (string) - translated string
@@ -3257,7 +3249,7 @@ public function log_to_file($text, $header = null) {
    *
    * @param agency_id (string)
    * @param agency_type (string) - agency type as set in VIP base
-   * @return (string) - 
+   * @return (string) -
    */
   private function set_agency_type($agency_id, $agency_type) {
     static $agency_type_override;
@@ -3267,7 +3259,7 @@ public function log_to_file($text, $header = null) {
     return ($agency_type_override[$agency_id] ? $agency_type_override[$agency_id] : $agency_type);
   }
 
-  /** \brief return an xs:boolean 
+  /** \brief return an xs:boolean
    *
    * @param ch (char) - character to test
    * @return (char) - 1 for true and 0 for false
@@ -3289,7 +3281,7 @@ public function log_to_file($text, $header = null) {
   }
 
   /** \brief Append a object to array for non empty values
-   * @param arr (array) 
+   * @param arr (array)
    * @param val (string) - value of the object
    * @param lang (string) - language for the attribute
    * @return (object) - with element _value and language attribute
@@ -3354,7 +3346,7 @@ public function log_to_file($text, $header = null) {
   /** \brief
    *  return change array to string. For cache key
    *
-   * @param mix (object or array of objects) 
+   * @param mix (object or array of objects)
    * @param glue (string) Seperator between the elements
    * @return (string) the concatenated string
    */
@@ -3365,7 +3357,7 @@ public function log_to_file($text, $header = null) {
         $ret[] = $m->_value;
       }
       return implode($glue, $ret);
-    } 
+    }
     else
       return $mix->_value;
   }
@@ -3374,7 +3366,7 @@ public function log_to_file($text, $header = null) {
    *
    * select foo from bar where foo SIMILAR TO build_PostgreSQL_like($par);
    *
-   * @param par (string) the string to eventually locate in the DB 
+   * @param par (string) the string to eventually locate in the DB
    * @return (string) the DB SIMILAR TO expression
    */
   private function build_PostgreSQL_like($par) {

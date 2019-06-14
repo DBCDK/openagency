@@ -2969,6 +2969,17 @@ class openAgency extends webServiceServer {
    * @retval object  - psql object
    */
   private function connect($credentials, $line, &$error) {
+    // if credentials has the form: "<username>:<password>@<database.server.navn>:<port>/<database_navn>"
+    if (strpos('@', $credentials) === TRUE) {
+      if (strpos('://', $credentials) === FALSE) {
+        $credentials = "psql://" . $credentials;
+      }
+      $connect_arr = parse_url($credentials);
+      $connect_arr['path'] = trim($connect_arr['path'], ' /'); // dbname
+      $str = 'host=%2$s port=%3$s dbname=%6$s user=%4$s password=%5$s connect_timeout=1';
+      $credentials = vsprintf($str, $connect_arr);
+    }
+
     $psql = new psqlClass($credentials);
     $psql->set_charset('UTF8');
     $this->watch->start('connect');

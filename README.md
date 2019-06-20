@@ -66,4 +66,14 @@ In the root directory, use `scripts/build` or use the `build-dockers.py` script 
 
 ## Test
 
-TBD
+Tests are based on the docker images.
+
+To run a WebService image for ad-hoc tests, use `script/server`. This will start a docker instance of the service, 
+using the supplied [docker-compose file](docker/compose/systemtest/docker-compose.yml). 
+
+The service ports are allocated dynamically, but you can use the debug service to make it accessible 
+on `localhost:8080` in a web browser.
+
+To run a test that involves connecting to a database, use `script/test` or run the `run-system-test.sh` script directly. 
+This will start the webservice, wait for it to be ready, and then perform a few verifications.
+

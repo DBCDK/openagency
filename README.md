@@ -1,13 +1,12 @@
 OpenAgency WebService, Copyright(c) 2009, DBC
 
-Introduction
-------------
+# Introduction
 
 OpenAgency webservice and client
 
 
-License
--------
+# License
+
 DBC-Software Copyright ?. 2009, Danish Library Center, dbc as.
 
 This library is Open source middleware/backend software developed and distributed
@@ -31,35 +30,40 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 
-Documentation
--------------
+# Documentation
 http://oss.dbc.dk/plone/services/open-agency
 
 Use Doxygen to get code documentation
 
 
-Build
------
+# Getting Started
 
-To fetch The Needed OLS_class_lib files run the build.sh script. this script also builds 
-the opensearch-webservice.tar.gz file needed for the docker build. 
-
+This project depends on a project still in subversion. After checkout from gitlab, 
+run the script [`script/bootstrap`](script/bootstrap)
+to retrieve this svn dependency:
 ```bash
-./build.sh
-(cd docker; docker build -t openagency:devel . )
-docker run -ti -p 8080:80 --env-file=boble.env openagency:devel
+$ ./script/bootstrap 
+INFO: Checking out svn repo 'https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk' into directory './src/OLS_class_lib'
+INFO: Svn repo 'https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk' checked out into directory './src/OLS_class_lib'
+INFO: Svn info:
+Revision: 122504
+Last Changed Author: fvs
+Last Changed Rev: 122080
+Last Changed Date: 2018-10-02 15:59:39 +0200 (tir, 02 okt 2018)
 ```
 
-Development
------------
+As the name suggests, you can also run this script to update the contents. Changes to the external svn project is handled
+as ordinary svn changes.
 
-To start the docker with the php files just use 
-```bash
-./build.sh ; pushd docker ; docker build -t openagency:devel . ; popd ; docker run --rm --env-file test.env -ti -p 8080:80 -v {PWD}:/var/www/html/openagency --name=oa openagency:devel 
-```
+See the [script/README](script/README.md) for additional info about build scripts.
 
-Or do a rebuild of the image  and make a clean start 
-```bash
-./build.sh ; pushd docker ; docker build -t openagency:devel . ; popd ; docker run --rm --env-file test.env -ti -p 8080:80 --name=oa openagency:devel
-```
+## Building
 
+The project can be run "as is" in a properly configured Apache webserver, or you can build a docker image to test in.
+
+To build the docker image, the `build-dockers.py` tool is used. 
+In the root directory, use `scripts/build` or use the `build-dockers.py` script directly. 
+
+## Test
+
+TBD

@@ -2,7 +2,7 @@
 /**
  *
  * This file is part of Open Library System.
- * Copyright © 2009, Dansk Bibliotekscenter a/s,
+ * Copyright © 2009-2019, Dansk Bibliotekscenter a/s,
  * Tempovej 7-11, DK-2750 Ballerup, Denmark. CVR: 15149043
  *
  * Open Library System is free software: you can redistribute it and/or modify

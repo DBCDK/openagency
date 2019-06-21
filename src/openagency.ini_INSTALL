@@ -99,7 +99,7 @@ dump_timer = openAgency(%s)
 
 ; --------------
 ;agency_credentials = some_user/some_pwd@some.server.dbc.dk
-agency_credentials = @VIP_PG_LOGIN@
+agency_credentials = @VIP_CREDENTIALS@
 
 ; --------------
 ; table for automatic interlibrary loan setting of material owned by the library

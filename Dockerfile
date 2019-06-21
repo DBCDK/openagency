@@ -36,6 +36,6 @@ COPY src/OLS_class_lib/ /var/www/html/OLS_class_lib/
 RUN rm -Rf /var/www/html/OLS_class_lib/.svn /var/www/html/OLS_class_lib/test /var/www/html/OLS_class_lib/simpletest
 COPY src/xml/ /var/www/html/xml/
 COPY src/openagency.ini_INSTALL src/openagency.wsdl_INSTALL src/openagency.xsd src/server.php src/robots.txt_INSTALL /var/www/html/
-RUN chown -R www-data:www-data /var/www/html
+RUN ln -s server.php /var/www/html/index.php && chown -R www-data:www-data /var/www/html
 
 

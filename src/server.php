@@ -826,10 +826,13 @@ class openAgency extends webServiceServer {
           // Søgbargeden kan evt. begrænses af broend_to_kilder.access_for
           $oci->bind('bind_y', 'Y');
           $this->watch->start('sql1');
-          $oci->set_query('SELECT DISTINCT *
+          $oci->set_query('SELECT * FROM (
+                             SELECT DISTINCT on (id_nr) *
                              FROM broend_to_kilder
-                            WHERE searchable = :bind_y
-                            ORDER BY upper(name)');
+                             WHERE searchable = :bind_y
+                             ORDER BY id_nr, upper(name)
+                           ) T
+                           ORDER BY upper(name)');
           $kilder_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           foreach ($kilder_res as $kilde) {
@@ -2669,10 +2672,13 @@ class openAgency extends webServiceServer {
             // Søgbargeden kan evt. begrænses af broend_to_kilder.access_for
             $oci->bind('bind_y', 'Y');
             $this->watch->start('sql1');
-            $oci->set_query('SELECT DISTINCT *
+            $oci->set_query('SELECT * FROM (
+                               SELECT DISTINCT on (id_nr) *
                                FROM broend_to_kilder
-                              WHERE searchable = :bind_y
-                              ORDER BY name');
+                               WHERE searchable = :bind_y
+                               ORDER BY id_nr, name
+                             ) T
+                             ORDER BY name');
             $kilder = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql1');
             $oci->bind('bind_agency', $agency);

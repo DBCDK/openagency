@@ -832,7 +832,7 @@ class openAgency extends webServiceServer {
                              WHERE searchable = :bind_y
                              ORDER BY id_nr, upper(name)
                            ) T
-                           ORDER BY upper(name)');
+                           ORDER BY upper(name) ASC');
           $kilder_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           foreach ($kilder_res as $kilde) {
@@ -2678,7 +2678,7 @@ class openAgency extends webServiceServer {
                                WHERE searchable = :bind_y
                                ORDER BY id_nr, name
                              ) T
-                             ORDER BY name');
+                             ORDER BY name ASC');
             $kilder = $oci->fetch_all_into_assoc();
             $this->watch->stop('sql1');
             $oci->bind('bind_agency', $agency);

@@ -829,7 +829,7 @@ class openAgency extends webServiceServer {
           $oci->set_query('SELECT * FROM (
                              SELECT DISTINCT on (id_nr) *
                              FROM broend_to_kilder
-                             WHERE searchable = \'Y\'
+                             WHERE searchable = :bind_y
                              ORDER BY id_nr, upper(name)
                            ) T
                            ORDER BY upper(name)');
@@ -2675,7 +2675,7 @@ class openAgency extends webServiceServer {
             $oci->set_query('SELECT * FROM (
                                SELECT DISTINCT on (id_nr) *
                                FROM broend_to_kilder
-                               WHERE searchable = \'Y\'
+                               WHERE searchable = :bind_y
                                ORDER BY id_nr, name
                              ) T
                              ORDER BY name');

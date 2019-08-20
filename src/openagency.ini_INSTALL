@@ -116,7 +116,7 @@ profile_for_own_material[profil_2][limit_in_days] = 10
 
 ; --------------
 ; DBC target address for order-systems
-dbc_target[z3950][address] = z3950.dbc.dk:210/danbib
+dbc_target[z3950][address] = @Z3950_URL@
 dbc_target[iso18626][address] = @COPA_RS_URL@
 dbc_target[iso18626][password] = @COPA_RS_PASSWD@
 
@@ -132,6 +132,7 @@ cache_expire = 7200
 ;   cache_operation_expire[automation] = 600
 ; the operations can be found in soapAction.
 ; if cache_operation_expire is not set for operation(s), the cache_expire above will be used
+cache_operation_expire[libraryRules] = @CACHE_EXPIRE_LIBRARYRULES@
 
 ; ==============
 

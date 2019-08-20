@@ -13,10 +13,12 @@ LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \
       VERBOSE_LEVEL="Level of log verbosity [WARNING+ERROR+FATAL+STAT+TIMER+TRACE]" \
       VIP_CREDENTIALS="Vip credential string, on the form ora_user/ora_paswd@my.oracle.server" \
       FORS_RIGHTS="An FORS request string." \
-      COPA_RS_URL="Url to the COPA RS service, e.g. https://iso18626.addi.dk/copa-rs/app/iso18626/. Note, COPA is not actually used by this service, but the information is served to some clients." \
-      COPA_RS_PASSWORD="Password to the COPA RS service. Note, COPA is not actually used by this service, but the information is served to some clients. For tests, you can use whatever you like here." \
+      Z3950_URL="Z39.50 address. [z3950.dbc.dk:210/danbib]"\
+      COPA_RS_URL="Url to the COPA RS service, e.g. https://iso18626.addi.dk/copa-rs/app/iso18626/" \
+      COPA_RS_PASSWORD="Password to the COPA RS service" \
       HTTP_PROXY="NCIP HTTP proxy - assumed only used for tests. [<empty string>]" \
-      HTTP_PROXY_INSECURE_MODE_FOR_TEST_ONLY="Use insecure mode (ignore certificates) for https communication when HTTP_PROXY enabled in ncip mode. Use ONLY in tests. Set to 1 to enable [<empty string>]"
+      HTTP_PROXY_INSECURE_MODE_FOR_TEST_ONLY="Use insecure mode (ignore certificates) for https communication when HTTP_PROXY enabled in ncip mode. Use ONLY in tests. Set to 1 to enable [<empty string>]" \
+      CACHE_EXPIRE_LIBRARYRULES="Cache expire time in seconds for libraryRules. [600]"
 
 # Configure memcached
 COPY docker/images/ws/memcached.conf /etc/

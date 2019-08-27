@@ -1,7 +1,5 @@
 FROM docker.dbc.dk/dbc-apache-php7
 
-EXPOSE 80
-
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -q -y install php-mbstring ca-certificates php7.0-pgsql
 
 LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \

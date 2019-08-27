@@ -3015,8 +3015,7 @@ class openAgency extends webServiceServer {
         if (empty($res->agencyId)) {
           Object::set_value($res, 'error', 'no_agencies_found');
         }
-      }
-      catch (ociException $e) {
+      } catch (ociException $e) {
         $this->watch->stop('sql1');
         VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
         Object::set_value($res, 'error', 'service_unavailable');
@@ -3045,8 +3044,10 @@ class openAgency extends webServiceServer {
     $this->watch->stop('sql1');
     $this->watch->start('fetch');
     $rows = $oci->fetch_all_into_assoc();
-    foreach ($rows as $row) {
-      Object::set_array_value($res, 'agencyId', $row['VILSE']);
+    if (is_array($rows)) {
+      foreach ($rows as $row) {
+        Object::set_array_value($res, 'agencyId', $row['VILSE']);
+      }
     }
     $this->watch->stop('fetch');
     return $res;

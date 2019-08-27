@@ -2392,7 +2392,7 @@ class openAgency extends webServiceServer {
                 $filter_delete = ' AND v.delete_mark is null';
                 $filter_filial = ' AND (vb.filial_tf <> :bind_n OR vb.filial_tf is null)';
             }
-            $sql ='SELECT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, v.leder, v.titel,
+            $sql ='SELECT DISTINCT v.bib_nr, v.navn, v.navn_e, v.navn_k, v.navn_e_k, v.type, v.tlf_nr, v.email, v.badr, v.leder, v.titel,
                           v.bpostnr, v.bcity, v.isil, v.kmd_nr, v.url_homepage, v.url_payment, v.delete_mark, v.p_nr, v.uni_c_nr,
                           v.afsaetningsbibliotek, v.afsaetningsnavn_k, v.knudepunkt, v.leder_samarb,  v.titel_samarb,
                           v.latitude, v.longitude,
@@ -3015,8 +3015,7 @@ class openAgency extends webServiceServer {
         if (empty($res->agencyId)) {
           Object::set_value($res, 'error', 'no_agencies_found');
         }
-      }
-      catch (ociException $e) {
+      } catch (ociException $e) {
         $this->watch->stop('sql1');
         VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
         Object::set_value($res, 'error', 'service_unavailable');
@@ -3045,8 +3044,10 @@ class openAgency extends webServiceServer {
     $this->watch->stop('sql1');
     $this->watch->start('fetch');
     $rows = $oci->fetch_all_into_assoc();
-    foreach ($rows as $row) {
-      Object::set_array_value($res, 'agencyId', $row['VILSE']);
+    if (is_array($rows)) {
+      foreach ($rows as $row) {
+        Object::set_array_value($res, 'agencyId', $row['VILSE']);
+      }
     }
     $this->watch->stop('fetch');
     return $res;

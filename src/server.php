@@ -1014,7 +1014,8 @@ class openAgency extends webServiceServer {
                                   AND vip.bib_nr = :bind_bib_nr
                                 ORDER BY prionr DESC');
               $this->watch->start('fetch3');
-              while ($lv_row = $oci->fetch_into_assoc()) {
+              $rows = $oci->fetch_all_into_assoc();
+              foreach ($rows as $lv_row) {
                 if ($p = $vv_row[$lv_row['VILSE']]) {
                   $consortia[] = $p;
                 }

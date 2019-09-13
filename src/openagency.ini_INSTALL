@@ -61,7 +61,7 @@ soapAction[showOrder] = showOrderRequest
 
 ; --------------
 ; validate
-validate[request] = openagency.xsd
+;validate[request] = openagency.xsd
 ;validate[response] = openagency.xsd
 
 ; --------------

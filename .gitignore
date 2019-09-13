@@ -1,7 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 .idea/
 BUILDNUMBER
-OLS_class_lib/
+#OLS_class_lib/
 index.php
 openagency.ini
 openagency.wsdl

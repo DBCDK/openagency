@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+echo "Script temporarily disabled"
+exit 0
+
 which dirname &> /dev/null || die "Unable to run dirname command - please install it"
 export SCRIPTNAME="bootstrap"
 export SCRIPT_DIR=$(dirname "$(readlink -f "$0")") || { echo "Unable to identify basedir from $0" ; exit 1; }
@@ -9,6 +12,7 @@ export SCRIPT_DIR=$(dirname "$(readlink -f "$0")") || { echo "Unable to identify
 # Get (or update) the svn externals needed by Borchk.
 SVNREPO="https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk"
 EXTNAME="OLS_class_lib"
+REVISION="117239" # = Oracle OpenQgency 2.34 version
 
 set -e
 
@@ -20,11 +24,11 @@ cd "${SRCDIR}" || die "Unable to change directory to ${SRCDIR}"
 if [ -d ${EXTNAME} ] ; then
     cd ${EXTNAME} || die "Unable to change directory to ${SRCDIR}/${EXTNAME}"
     info "Updating svn repo in '${SRCDIR}/${EXTNAME}'"
-    svn -q up || die "Error when updating svn repo in '${SRCDIR}/${EXTNAME}'"
+    svn -q up -r ${REVISION} || die "Error when updating svn repo in '${SRCDIR}/${EXTNAME}'"
     info "Svn repo in '${SRCDIR}/${EXTNAME}' updated"
 else
     info "Checking out svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
-    svn -q checkout ${SVNREPO} ${EXTNAME} || die "Unable to checkout svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
+    svn -q checkout -r ${REVISION} ${SVNREPO} ${EXTNAME} || die "Unable to checkout svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
     info "Svn repo '${SVNREPO}' checked out into directory '${SRCDIR}/${EXTNAME}'"
     cd ${EXTNAME} || die "Unable to change into directory '${SRCDIR}/${EXTNAME}'"
 fi

@@ -1,5 +1,7 @@
 # Scripts To Rule Them All
 
+NOTE - The scripts bootstrap, setup and update have been deprecated - NOTE
+
 This is an experiment, based on the approach from [scripts to rule them all](https://github.com/github/scripts-to-rule-them-all), to
 try to make a simple and uniform approach to scripts for a project.
 

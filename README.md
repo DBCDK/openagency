@@ -35,8 +35,16 @@ http://oss.dbc.dk/plone/services/open-agency
 
 Use Doxygen to get code documentation
 
+# Release information
+This version of OpenAgency is based on OLS class library revision 117239 with the following exceptions:\
+File pg_database_class.php has been backported from revision 124699\
+File pg_wrapper_class.php has been backported from revision 124699\
+File verbose_json_class.php has been backported from revision 124699
 
 # Getting Started
+
+This section is deprecated contrary to the information below, the entire project, including the OLS class lib,
+is contained in the gitlab repository. 
 
 This project depends on a project still in subversion. After checkout from gitlab, 
 run the script [`script/bootstrap`](script/bootstrap)

@@ -24,10 +24,10 @@
  *
  */
 
-
+require_once('OLS_class_lib/verbose_json_class.php');
 require_once('OLS_class_lib/webServiceServer_class.php');
-require_once 'OLS_class_lib/memcache_class.php';
-require_once("OLS_class_lib/pg_wrapper_class.php");
+require_once('OLS_class_lib/memcache_class.php');
+require_once('OLS_class_lib/pg_wrapper_class.php');
 
 // Default Oracle datatype used for bindings. Defined in PHP OCI database extension.
 // Added here to avoid PHP log notices.
@@ -3310,7 +3310,7 @@ class openAgency extends webServiceServer {
   private function value_and_language($val, $lang) {
     $ret = new stdClass();
     $ret->_value = $val;
-    Object::set_value($ret->_attributes, 'oa:language', $lang);
+    Object::set_value($ret->_attributes, 'language', $lang);
     return $ret;
   }
 

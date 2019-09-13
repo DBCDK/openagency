@@ -33,7 +33,6 @@ pipeline {
         disableConcurrentBuilds()
     }
 
-
     stages {
         stage("clear workspace") {
             steps {
@@ -45,7 +44,9 @@ pipeline {
             /* Let's make sure we have the OLS_class_lib repository cloned to our workspace */
             steps {
                 checkout scm
-                checkout([$class: 'SubversionSCM', additionalCredentials: [], excludedCommitMessages: '', excludedRegions: '', excludedRevprop: '', excludedUsers: '', filterChangelog: false, ignoreDirPropChanges: false, includedRegions: '', locations: [[cancelProcessOnExternalsFail: true, credentialsId: 'GITLAB_DEPLOY_METASCRUM', depthOption: 'infinity', ignoreExternalsOption: true, local: 'src/OLS_class_lib', remote: 'https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk']], quietOperation: true, workspaceUpdater: [$class: 'CheckoutUpdater']])
+                script {
+                    sh "script/bootstrap"
+                }
             }
         }
 
@@ -257,4 +258,3 @@ def toPushTag(tag, prefixFrom, prefixTo, tagFrom, tagTo) {
     tag = tag.replaceFirst(/:$tagFrom$/, ":$tagTo")
     return tag
 }
-

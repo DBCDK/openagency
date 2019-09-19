@@ -17,7 +17,7 @@ export SCRIPT_DIR=$(dirname "$(readlink -f "$0")") || { echo "Unable to identify
 SVNREPO="https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk"
 EXTNAME="OLS_class_lib"
 OA_234_REV="117239" # = Oracle OpenAgency 2.34 version
-OA_234_DIFF_REV="124699" # = PostgreSQL OpenAgency 2.34 version
+OA_234_DIFF_REV="124719" # = PostgreSQL OpenAgency 2.34 version
 OA_234_DIFF_LIST="pg_database_class.php pg_wrapper_class.php verbose_json_class.php objconvert_class.php"
 
 set -e

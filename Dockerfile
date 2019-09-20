@@ -25,6 +25,9 @@ COPY docker/images/ws/memcached.conf /etc/
 COPY docker/images/ws/apache_security.conf /etc/apache2/conf-enabled/
 COPY docker/images/ws/000-default.conf /etc/apache2/sites-enabled/000-default.conf
 
+# Increase PHP memory to 4GB
+RUN sed 's/\(memory_limit.*\)/; \1\nmemory_limit = 4096M/g' --in-place /etc/php/7.0/apache2/php.ini
+
 # Setup entrypoint
 COPY docker/images/ws/entrypoint.sh /
 RUN chmod 755 /entrypoint.sh

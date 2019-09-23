@@ -1000,8 +1000,10 @@ class openAgency extends webServiceServer {
                               WHERE bib_nr = :bind_bib_nr');
             $this->watch->start('fetch2');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              $vv_row[$row['BIB_NR_VIDERESTIL']] = $row;
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                $vv_row[$row['BIB_NR_VIDERESTIL']] = $row;
+              }
             }
             $this->watch->stop('fetch2');
             $this->watch->stop('sql2');
@@ -1015,9 +1017,11 @@ class openAgency extends webServiceServer {
                                 ORDER BY prionr DESC');
               $this->watch->start('fetch3');
               $rows = $oci->fetch_all_into_assoc();
-              foreach ($rows as $lv_row) {
-                if ($p = $vv_row[$lv_row['VILSE']]) {
-                  $consortia[] = $p;
+              if (is_array($rows)) {
+                foreach ($rows as $lv_row) {
+                  if ($p = $vv_row[$lv_row['VILSE']]) {
+                    $consortia[] = $p;
+                  }
                 }
               }
               $this->watch->start('fetch3');
@@ -1551,11 +1555,13 @@ class openAgency extends webServiceServer {
                   unset($f);
                 }
               }
-              foreach ($fjernadgang_rows as $fjern) {
-                Object::set_value($f->_value, 'borrowerCheckSystem', $fjern['NAVN']);
-                Object::set_value($f->_value, 'borrowerCheck', $fjern['FJERNADGANG_HAR_LAANERTJEK'] == 1 ? '1' : '0');
-                $bCP[] = $f;
-                unset($f);
+              if (is_array($fjernadgang_rows)) {
+                foreach ($fjernadgang_rows as $fjern) {
+                  Object::set_value($f->_value, 'borrowerCheckSystem', $fjern['NAVN']);
+                  Object::set_value($f->_value, 'borrowerCheck', $fjern['FJERNADGANG_HAR_LAANERTJEK'] == 1 ? '1' : '0');
+                  $bCP[] = $f;
+                  unset($f);
+                }
               }
               $aP = new stdClass();
               $aP->borrowerCheckParameters = $bCP;
@@ -1888,20 +1894,22 @@ class openAgency extends webServiceServer {
         $oci->set_query($sql);
         $this->watch->stop('sql1');
         $this->watch->start('fetch');
-       $rows = $oci->fetch_all_into_assoc();
-       foreach ($rows as $row) {
-          if (empty($curr_bib)) {
-            $curr_bib = $row['BIB_NR'];
-          }
-          if ($curr_bib <> $row['BIB_NR']) {
-            if ($pickupAgency)
-              Object::set_array_value($res, 'pickupAgency', $pickupAgency);
-            unset($pickupAgency);
-            $curr_bib = $row['BIB_NR'];
-          }
-          if ($row && (empty($distance_sql) || ($row['DISTANCE'] && ($row['DISTANCE'] <= $distance)))) {
-            //$row['NAVN'] = $row['VSN_NAVN'];
-            self::fill_pickupAgency($pickupAgency, $row);
+        $rows = $oci->fetch_all_into_assoc();
+        if (is_array($rows)) {
+          foreach ($rows as $row) {
+            if (empty($curr_bib)) {
+              $curr_bib = $row['BIB_NR'];
+            }
+            if ($curr_bib <> $row['BIB_NR']) {
+              if ($pickupAgency)
+                Object::set_array_value($res, 'pickupAgency', $pickupAgency);
+              unset($pickupAgency);
+              $curr_bib = $row['BIB_NR'];
+            }
+            if ($row && (empty($distance_sql) || ($row['DISTANCE'] && ($row['DISTANCE'] <= $distance)))) {
+              //$row['NAVN'] = $row['VSN_NAVN'];
+              self::fill_pickupAgency($pickupAgency, $row);
+            }
           }
         }
         $this->watch->stop('fetch');
@@ -1993,24 +2001,26 @@ class openAgency extends webServiceServer {
             //$mem = memory_get_usage();
             $this->watch->start('fetch');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              Object::set_value($o, 'agencyId', self::normalize_agency($row['BIB_NR']));
-              Object::set_value($o, 'agencyType', $row['BIB_TYPE']);
-              foreach ($row as $name => $value) {
-                if ($name != 'BIB_NR' && $name != 'BIB_TYPE') {
-                  Object::set_value($r, 'name', mb_strtolower($name));
-                  if ($enum = $enum_map[mb_strtolower($name)]) {
-                    Object::set_value($r, 'string', $enum[$value]);
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                Object::set_value($o, 'agencyId', self::normalize_agency($row['BIB_NR']));
+                Object::set_value($o, 'agencyType', $row['BIB_TYPE']);
+                foreach ($row as $name => $value) {
+                  if ($name != 'BIB_NR' && $name != 'BIB_TYPE') {
+                    Object::set_value($r, 'name', mb_strtolower($name));
+                    if ($enum = $enum_map[mb_strtolower($name)]) {
+                      Object::set_value($r, 'string', $enum[$value]);
+                    }
+                    else {
+                      Object::set_value($r, 'bool', ($value == 'Y' ? '1' : '0'));
+                    }
+                    Object::set_array_value($o, 'libraryRule', $r);
+                    unset($r);
                   }
-                  else {
-                    Object::set_value($r, 'bool', ($value == 'Y' ? '1' : '0'));
-                  }
-                  Object::set_array_value($o, 'libraryRule', $r);
-                  unset($r);
                 }
+                Object::set_array_value($res, 'libraryRules', $o);
+                unset($o);
               }
-              Object::set_array_value($res, 'libraryRules', $o);
-              unset($o);
             }
             $this->watch->stop('fetch');
             //$this->watch->sums['mem'] = memory_get_usage() - $mem;

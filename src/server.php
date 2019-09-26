@@ -62,16 +62,22 @@ class openAgency extends webServiceServer {
    * - error
    **/
   public function automation($param) {
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    $this->watch->start('aaa');
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_aut_' . $this->config->get_inifile_hash() . $agency . $param->autService->_value . $param->materialType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
@@ -935,16 +941,22 @@ class openAgency extends webServiceServer {
    * or error
    */
   public function service($param) {
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    $this->watch->start('aaa');
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_ser_' . $this->config->get_inifile_hash() . $agency . $param->service->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
@@ -1943,15 +1955,21 @@ class openAgency extends webServiceServer {
    */
   public function libraryRules($param) {
     // NB: test agency id: 125060
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    $this->watch->start('aaa');
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       $cache_key = 'OA_libRu_' . $this->config->get_inifile_hash() . $param->agencyId->_value . md5(json_encode($param->libraryRule));
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
@@ -2217,10 +2235,14 @@ class openAgency extends webServiceServer {
    * - - error
    */
   public function pickupAgencyList($param) {
+    $this->watch->start('aaa');
     $ora_par = array();
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       foreach (array('agencyId', 'agencyName', 'agencyAddress', 'postalCode', 'city', 'anyField') as $par) {
         if (is_array($param->$par)) {
           foreach ($param->$par as $p) {
@@ -2260,8 +2282,10 @@ class openAgency extends webServiceServer {
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
@@ -2661,17 +2685,23 @@ class openAgency extends webServiceServer {
    * - - - - rdfInverse
    */
   public function openSearchProfile($param) {
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    $this->watch->start('aaa');
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       $sql_add = NULL;
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
       if (empty($res->error)) {
@@ -2951,16 +2981,22 @@ class openAgency extends webServiceServer {
    * - error
    */
   public function showOrder($param) {
-    if (!$this->aaa->has_right('netpunkt.dk', 500))
+    $this->watch->start('aaa');
+    if (!$this->aaa->has_right('netpunkt.dk', 500)) {
+      $this->watch->stop('aaa');
       Object::set_value($res, 'error', 'authentication_error');
-    else {
+    } else {
+      $this->watch->stop('aaa');
+      $this->watch->start('preamble');
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_shoO_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
         VerboseJson::log(STAT, 'Cache hit');
+        $this->watch->stop('preamble');
         return $ret;
       }
+      $this->watch->stop('preamble');
       $this->watch->start('entry');
       $res = self::get_prioritized_agency_list($agency, 'visprioritet');
       if ($res->error->_value == 'no_agencies_found') {

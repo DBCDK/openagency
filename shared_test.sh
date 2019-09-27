@@ -175,9 +175,10 @@ function waitForOk() {
   # We just want - at this point - to make sure we are talking to the database
   # and that the datamodel is sort of OK
   # Abuse this to check that the service is running.
-  # waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?HowRU" 300 openagency-vip || die "openagency-vip service not ready in 300 seconds"
-  waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-vip || die "openagency-vip service not ready in 300 seconds"
+  # waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
+  waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
+http://localhost:32772/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3
   # If we are connected to the database, it would appear we get a 200 with
   # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
   # <SOAP-ENV:Body><oa:serviceResponse><oa:error>agency_not_found</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
@@ -186,8 +187,12 @@ function waitForOk() {
   # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
   # <SOAP-ENV:Body><oa:serviceResponse><oa:error>service_unavailable</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
 
-  # Make sure we are connected
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-vip agency_not_found
+  # Make sure we are connnected to something.
+
+  # This uses "service"
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found
+  # But, we also want this, to check the log when debugging.
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
 }
 
 # Print info about how to stop containers.

@@ -16,9 +16,9 @@ function setSysVars() {
   export COMPOSE_FILE="${TEST_PATH}/docker-compose.yml"
   # In order to allow concurrent build in Jenkins, append tag, if != latest
   if [ ${tag} != "latest" ]; then
-    export COMPOSE_PROJECT_NAME=openagency-vipsystemtest-${tag}
+    export COMPOSE_PROJECT_NAME=openagency-phpsystemtest-${tag}
   else
-    export COMPOSE_PROJECT_NAME=openagency-vipsystemtest
+    export COMPOSE_PROJECT_NAME=openagency-phpsystemtest
   fi
   debug "COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}"
 }

@@ -2829,9 +2829,17 @@ class openAgency extends webServiceServer {
       }
     }
     //var_dump($res); var_dump($param); die();
+    $this->watch->start("postamble");
+    $this->watch->start("p1");
     Object::set_value($ret, 'openSearchProfileResponse', $res);
+    $this->watch->stop("p1");
+    $this->watch->start("p2");
     $ret = $this->objconvert->set_obj_namespace($ret, $this->xmlns['oa']);
+    $this->watch->stop("p2");
+    $this->watch->start("p3");
     if (empty($res->error)) $this->cache->set($cache_key, $ret);
+    $this->watch->stop("p3");
+    $this->watch->stop("postamble");
     $this->watch->stop('entry');
     return $ret;
   }

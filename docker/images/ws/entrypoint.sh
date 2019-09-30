@@ -107,6 +107,9 @@ info "Configuring apache access and error logs to link to stdout/stderr"
 ln -sf /proc/self/fd/1 /var/log/apache2/access.log || die "Unable to link access log"
 ln -sf /proc/self/fd/2 /var/log/apache2/error.log  || die "Unable to link error log"
 
+# Start memcached.
+/etc/init.d/memcached start
+
 # Start Apache, and let it take it from there.
 info "Starting Apache"
 /usr/sbin/apache2ctl -D FOREGROUND

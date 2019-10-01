@@ -95,8 +95,8 @@ class openAgency extends webServiceServer {
               $vf_row = $oci->fetch_into_assoc();
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            catch (fetException $e) {
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             $this->watch->stop('sql1');
@@ -122,9 +122,9 @@ class openAgency extends webServiceServer {
                   }
                   $this->watch->stop('fetch');
                 }
-                catch (ociException $e) {
+                catch (fetException $e) {
                   $this->watch->stop('sql2');
-                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
               }
@@ -144,8 +144,8 @@ class openAgency extends webServiceServer {
                   }
                   $this->watch->stop('fetch');
                 }
-                catch (ociException $e) {
-                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                catch (fetException $e) {
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
                 $this->watch->stop('sql3');
@@ -188,9 +188,9 @@ class openAgency extends webServiceServer {
               }
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
+            catch (fetException $e) {
               $this->watch->stop('sql4');
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -217,9 +217,9 @@ class openAgency extends webServiceServer {
                 Object::set_value($ap, 'willSend', 'NO');
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
+            catch (fetException $e) {
               $this->watch->stop('sql5');
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -294,9 +294,9 @@ class openAgency extends webServiceServer {
           }
           $this->watch->stop('fetch');
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -362,9 +362,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'encryption', $o);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -445,9 +445,9 @@ class openAgency extends webServiceServer {
             }
             $this->watch->stop('fetch');
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -522,9 +522,9 @@ class openAgency extends webServiceServer {
             Object::set_value($res, 'error', 'profile_not_found');
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -704,9 +704,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'registryInfo', $registryInfo);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -780,9 +780,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'saouLicenseInfo', $sl);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -895,10 +895,10 @@ class openAgency extends webServiceServer {
             Object::set_value($res, 'error', 'profile_not_found');
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -1062,8 +1062,8 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql4');
           }
         }
-        catch (ociException $e) {
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        catch (fetException $e) {
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
@@ -1929,9 +1929,9 @@ class openAgency extends webServiceServer {
           Object::set_array_value($res, 'pickupAgency', $pickupAgency);
         }
       }
-      catch (ociException $e) {
+      catch (fetException $e) {
         $this->watch->stop('sql1');
-        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
         Object::set_value($res, 'error', 'service_unavailable');
       }
       $this->watch->stop('sql1');
@@ -2043,9 +2043,9 @@ class openAgency extends webServiceServer {
             $this->watch->stop('fetch');
             //$this->watch->sums['mem'] = memory_get_usage() - $mem;
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             if ($oci->error['code'] == 904) {
               Object::set_value($res, 'error', 'error_in_request');
             } else {
@@ -2107,9 +2107,9 @@ class openAgency extends webServiceServer {
           $this->watch->stop('fetch');
           //$this->watch->sums['mem'] = memory_get_usage() - $mem;
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -2171,8 +2171,8 @@ class openAgency extends webServiceServer {
               unset($o);
             }
           }
-          catch (ociException $e) {
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          catch (fetException $e) {
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -2526,11 +2526,11 @@ class openAgency extends webServiceServer {
               Object::set_value($res, 'error', 'no_agencies_found');
             }
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2788,8 +2788,8 @@ class openAgency extends webServiceServer {
               }
             }
           }
-          catch (ociException $e) {
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          catch (fetException $e) {
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         } else {
@@ -2817,12 +2817,12 @@ class openAgency extends webServiceServer {
             }
             $this->watch->stop('fetch4');
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
             $this->watch->stop('sql4');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2931,9 +2931,9 @@ class openAgency extends webServiceServer {
             unset($s);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -3023,7 +3023,7 @@ class openAgency extends webServiceServer {
   /* ----------------------------------------------------------------------------- */
 
 
-  /** \brief get a oci connection
+  /** \brief get a connection to the database
    *
    * @param string $credentials
    * @param object $error
@@ -3034,10 +3034,10 @@ class openAgency extends webServiceServer {
     $psql->set_charset('UTF8');
     $this->watch->start('connect');
     try {
-      $psql->connect();
+      $psql->open();
     }
     catch (fetException $e) {
-      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: psql connect error: ' . $psql->get_error_string());
+      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: psql connect error: ' . $e->getMessage());
       Object::set_value($error, 'error', 'service_unavailable');
     }
     $this->watch->stop('connect');
@@ -3070,9 +3070,9 @@ class openAgency extends webServiceServer {
         if (empty($res->agencyId)) {
           Object::set_value($res, 'error', 'no_agencies_found');
         }
-      } catch (ociException $e) {
+      } catch (fetException $e) {
         $this->watch->stop('sql1');
-        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
         Object::set_value($res, 'error', 'service_unavailable');
       }
     }

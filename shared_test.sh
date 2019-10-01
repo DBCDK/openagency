@@ -141,6 +141,7 @@ function checkServiceMatch() {
     if [[ "$RES" == *200 ]] ; then
         if grep "${MATCH}" "${OUTPUT}" &> /dev/null ; then
             info "Match against ${MATCH} found in service output. Service is OK"
+            debug "output: '$(cat ${OUTPUT})'"
             return 0
         fi
     fi

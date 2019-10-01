@@ -178,7 +178,6 @@ function waitForOk() {
   # waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
   waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
-http://localhost:32772/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3
   # If we are connected to the database, it would appear we get a 200 with
   # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
   # <SOAP-ENV:Body><oa:serviceResponse><oa:error>agency_not_found</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
@@ -188,6 +187,10 @@ http://localhost:32772/server.php?action=openSearchProfile&agencyId=710100&profi
   # <SOAP-ENV:Body><oa:serviceResponse><oa:error>service_unavailable</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
 
   # Make sure we are connnected to something.
+
+  # You can use these two lines to force connect errors in the database log, during development
+  # VIP_POSTGRES_CONTAINERID=$(docker-compose ps -q ${VIP_POSTGRES_SERVICE}) || die "Unable to obtain container id for compose service ${VIP_POSTGRES_SERVICE}"
+  # docker kill ${VIP_POSTGRES_CONTAINERID} || die "Unable to kill postgres container"
 
   # This uses "service"
   checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found

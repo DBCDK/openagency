@@ -24,7 +24,7 @@ pipeline {
     }
     triggers {
         pollSCM("H/3 * * * *")
-        upstream('/vip/vipcore/master')
+        upstream( upstreamProjects: '/vip/vipcore/master,/Docker/Docker-apache-php7/master')
     }
     options {
         buildDiscarder(logRotator(artifactDaysToKeepStr: "", artifactNumToKeepStr: "", daysToKeepStr: "30", numToKeepStr: "30"))

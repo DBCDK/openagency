@@ -95,8 +95,8 @@ class openAgency extends webServiceServer {
               $vf_row = $oci->fetch_into_assoc();
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            catch (fetException $e) {
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             $this->watch->stop('sql1');
@@ -122,9 +122,9 @@ class openAgency extends webServiceServer {
                   }
                   $this->watch->stop('fetch');
                 }
-                catch (ociException $e) {
+                catch (fetException $e) {
                   $this->watch->stop('sql2');
-                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
               }
@@ -144,8 +144,8 @@ class openAgency extends webServiceServer {
                   }
                   $this->watch->stop('fetch');
                 }
-                catch (ociException $e) {
-                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+                catch (fetException $e) {
+                  VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
                   Object::set_value($res, 'error', 'service_unavailable');
                 }
                 $this->watch->stop('sql3');
@@ -188,9 +188,9 @@ class openAgency extends webServiceServer {
               }
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
+            catch (fetException $e) {
               $this->watch->stop('sql4');
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -217,9 +217,9 @@ class openAgency extends webServiceServer {
                 Object::set_value($ap, 'willSend', 'NO');
               $this->watch->stop('fetch');
             }
-            catch (ociException $e) {
+            catch (fetException $e) {
               $this->watch->stop('sql5');
-              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+              VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
               Object::set_value($res, 'error', 'service_unavailable');
             }
             break;
@@ -294,9 +294,9 @@ class openAgency extends webServiceServer {
           }
           $this->watch->stop('fetch');
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -362,9 +362,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'encryption', $o);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -445,9 +445,9 @@ class openAgency extends webServiceServer {
             }
             $this->watch->stop('fetch');
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -522,9 +522,9 @@ class openAgency extends webServiceServer {
             Object::set_value($res, 'error', 'profile_not_found');
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -704,9 +704,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'registryInfo', $registryInfo);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -780,9 +780,9 @@ class openAgency extends webServiceServer {
             Object::set_array_value($res, 'saouLicenseInfo', $sl);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -895,10 +895,10 @@ class openAgency extends webServiceServer {
             Object::set_value($res, 'error', 'profile_not_found');
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -1062,8 +1062,8 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql4');
           }
         }
-        catch (ociException $e) {
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        catch (fetException $e) {
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
           $this->watch->stop('sql1');
           $this->watch->stop('sql2');
@@ -1686,255 +1686,264 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
-      if (!empty($param->geolocation) && $geoloc = $param->geolocation->_value) {
-        $latitude = (!empty($param->latitude)) ? $geoloc->latitude->_value : NULL;
-        $longitude = (!empty($param->longitude)) ? $geoloc->longitude->_value : NULL;
-        $distanceInMeter = (!empty($param->distanceInMeter)) ? $geoloc->distanceInMeter->_value : NULL;
-        $geo_cache = $latitude . '_' . $longitude . '_' . $distanceInMeter;
-      }
-      $cache_key = 'OA_FinL_' .
-        $this->config->get_inifile_hash() .
-        self::stringiefy($param->agencyId) . '_' .
-        self::stringiefy($param->agencyName) . '_' .
-        self::stringiefy($param->agencyAddress) . '_' .
-        self::stringiefy($param->postalCode) . '_' .
-        self::stringiefy($param->city) . '_' .
-        self::stringiefy($param->stilNumber) . '_' .
-        self::stringiefy($param->anyField) . '_' .
-        self::stringiefy($param->libraryType) . '_' .
-        self::stringiefy($param->libraryStatus) . '_' .
-        self::stringiefy($param->pickupAllowed) . '_' .
-        $geo_cache . '_' .
-        self::stringiefy($param->sort);
-      self::set_cache_expire($this->cache_expire[__FUNCTION__]);
-      if ($ret = $this->cache->get($cache_key)) {
-        VerboseJson::log(STAT, 'Cache hit');
-        return $ret;
-      }
-      $this->watch->start('entry');
-      $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
-      // agencyId
-      if ($agency_id = self::strip_agency($param->agencyId->_value)) {
-        $sqls[] = 'vip.bib_nr = :bind_bib_nr';
-        $oci->bind('bind_bib_nr', $agency_id);
-      }
-      // agencyName
-      if (!empty($param->agencyName) && $val = $param->agencyName->_value) {
-        $sqls[] = '(LOWER(vip.navn) SIMILAR TO :bind_navn)' .
-                  ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_navn AND vip_sup.type = :bind_n)';
-        $oci->bind('bind_navn', self::build_PostgreSQL_like($val));
-        $oci->bind('bind_n', 'N');
-      }
-      // agencyAddress
-      if (!empty($param->agencyAddress) && $val = $param->agencyAddress->_value) {
-        $sqls[] = '(LOWER(vip.badr) SIMILAR TO :bind_addr' .
-            ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_addr AND vip_sup.type = :bind_a)' .
-            ' OR LOWER(vip_vsn.badr) SIMILAR TO upper(:bind_addr))';
-        $oci->bind('bind_addr', self::build_PostgreSQL_like($val));
-        $oci->bind('bind_a', 'A');
-      }
-      // postalCode
-      if (!empty($param->postalCode) && $val = $param->postalCode->_value) {
-        $sqls[] = '(LOWER(vip.bpostnr) SIMILAR TO :bind_postnr' .
-            ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_postnr AND vip_sup.type = :bind_p))';
-        $oci->bind('bind_postnr', self::build_PostgreSQL_like($val));
-        $oci->bind('bind_p', 'P');
-      }
-
-      // city
-      if (!empty($param->city) && $val = $param->city->_value) {
-        $sqls[] = 'LOWER(vip.bcity) SIMILAR TO :bind_city';
-        $oci->bind('bind_city', self::build_PostgreSQL_like($val));
-      }
-
-      // stilNumber
-      if (!empty($param->stilNumber) && $val = $param->stilNumber->_value) {
-        $sqls[] = 'vip.uni_c_nr = :bind_uni_c_nr';
-        $oci->bind('bind_uni_c_nr', $val);
-      }
-
-      // anyField
-      if (!empty($param->anyField) && $val = $param->anyField->_value) {
-        $bib_nr = self::strip_agency($param->anyField->_value);
-        if (is_numeric($bib_nr) && (strlen($bib_nr) == 6)) {
-          $oci->bind('bind_bib_nr', $bib_nr);
-          $bibnr_sql = '(vip.bib_nr = :bind_bib_nr) OR ';
+        if (!empty($param->geolocation) && $geoloc = $param->geolocation->_value) {
+            $latitude = (!empty($param->latitude)) ? $geoloc->latitude->_value : NULL;
+            $longitude = (!empty($param->longitude)) ? $geoloc->longitude->_value : NULL;
+            $distanceInMeter = (!empty($param->distanceInMeter)) ? $geoloc->distanceInMeter->_value : NULL;
+            $geo_cache = $latitude . '_' . $longitude . '_' . $distanceInMeter;
         }
-        $sqls[] = '(' . $bibnr_sql .
-          'LOWER(vip.navn) SIMILAR TO :bind_any' .
-          ' OR LOWER(vip.badr) SIMILAR TO :bind_any' .
-          ' OR LOWER(vip.bpostnr) SIMILAR TO :bind_any' .
-          ' OR LOWER(vip.bcity) SIMILAR TO :bind_any' .
-          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_n)' .
-          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_a)' .
-          ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_p))';
-        $oci->bind('bind_any', self::build_PostgreSQL_like($val));
-        $oci->bind('bind_a', 'A');
-        $oci->bind('bind_n', 'N');
-        $oci->bind('bind_p', 'P');
-      }
-
-      // libraryType
-      if ((!empty($param->libraryType) && $val = $param->libraryType->_value)
-          && ($param->libraryType->_value == 'Folkebibliotek'
-            || $param->libraryType->_value == 'Forskningsbibliotek'
-            || $param->libraryType->_value == 'Skolebibliotek'
-            || $param->libraryType->_value == 'Other')) {
-        $sqls[] = 'vip_vsn.bib_type = :bind_bib_type';
-        $oci->bind('bind_bib_type', $param->libraryType->_value);
-      }
-      elseif (empty($agency_id) && empty($param->stilNumber->_value)) {
-        $sqls[] = '(vip_vsn.bib_type != :bind_bib_type OR vip_vsn.bib_type IS null)';
-        $oci->bind('bind_bib_type', 'Skolebibliotek');
-      }
-
-      // libraryStatus
-      $libraryStatus_sql = 'vip.delete_mark is null';
-      if (!empty($param->libraryStatus)) {
-        if ($param->libraryStatus->_value == 'usynlig') {
-          $oci->bind('bind_u', 'U');
-          $libraryStatus_sql = 'vip.delete_mark = :bind_u';
-        } elseif ($param->libraryStatus->_value == 'slettet') {
-          $oci->bind('bind_s', 'S');
-          $libraryStatus_sql = 'vip.delete_mark = :bind_s';
-        } elseif ($param->libraryStatus->_value == 'aktive') {
-          $oci->bind('bind_u', 'U');
-          $libraryStatus_sql = '(vip.delete_mark = :bind_u OR vip.delete_mark is NULL)';
+        $cache_key = 'OA_FinL_' .
+            $this->config->get_inifile_hash() .
+            self::stringiefy($param->agencyId) . '_' .
+            self::stringiefy($param->agencyName) . '_' .
+            self::stringiefy($param->agencyAddress) . '_' .
+            self::stringiefy($param->postalCode) . '_' .
+            self::stringiefy($param->city) . '_' .
+            self::stringiefy($param->stilNumber) . '_' .
+            self::stringiefy($param->anyField) . '_' .
+            self::stringiefy($param->libraryType) . '_' .
+            self::stringiefy($param->libraryStatus) . '_' .
+            self::stringiefy($param->pickupAllowed) . '_' .
+            $geo_cache . '_' .
+            self::stringiefy($param->sort);
+        self::set_cache_expire($this->cache_expire[__FUNCTION__]);
+        if ($ret = $this->cache->get($cache_key)) {
+            VerboseJson::log(STAT, 'Cache hit');
+            return $ret;
         }
-      }
-      $sqls[] = $libraryStatus_sql;
-
-      // pickupAllowed
-      if (isset($param->pickupAllowed->_value)) {
-        $j = 'J';
-        $oci->bind('bind_j', $j);
-        if (self::xs_boolean($param->pickupAllowed->_value)) {
-          $sqls[] .= 'vb.best_modt = :bind_j';
-        }
-        else {
-          $sqls[] .= 'vb.best_modt != :bind_j';
-        }
-      }
-      $filter_sql = implode(' AND ', $sqls);
-
-      // sort
-      $distance_sql = NULL;
-      $sort_order = NULL;
-      if (isset($param->sort)) {
-        if (is_array($param->sort)) {
-          $sorts = $param->sort;
-        }
-        else {
-          $sorts = array($param->sort);
-        }
-        foreach ($sorts as $s) {
-          switch ($s->_value) {
-            case 'agencyId':      $sort_order[] = 'vip.bib_nr'; break;
-            case 'agencyName':    $sort_order[] = 'vip.navn'; break;
-            case 'agencyAddress': $sort_order[] = 'vip.badr'; break;
-            case 'postalCode':    $sort_order[] = 'vip.postnr'; break;
-            case 'city':          $sort_order[] = 'vip.bcity'; break;
-            case 'libraryType':   $sort_order[] = 'vip_vsn.bib_type'; break;
-          }
-        }
-        if ((count($sorts) == 1) && ($sorts[0]->_value == 'distance') && isset($geoloc->latitude->_value) && isset($geoloc->latitude->_value)) {
-          if (!$distance = intval($geoloc->distanceInMeter->_value)) {
-            $distance = 500000;
-          }
-          $sort_order[] = 'distance asc';
-          $deg2rad = 0.0174532925;
-          $rad2deg = 57.2957795;
-          $deg2meter = 111045;
-          $latitude = $geoloc->latitude->_value;
-          $longitude = $geoloc->longitude->_value;
-          // Flat earth society:
-          //$distance_sql = "$deg2meter * SQRT(POWER(vip.latitude-$latitude,2) + POWER(vip.longitude-$longitude,2)) distance, ";
-          // Haversine: https://en.wikipedia.org/wiki/Haversine_formula
-          $distance_sql = "$deg2meter * $rad2deg * (ACOS(COS($deg2rad*$latitude) * COS($deg2rad*vip.latitude) * COS($deg2rad*($longitude-vip.longitude)) + SIN($deg2rad*$latitude) * SIN($deg2rad*vip.latitude))) distance, ";
-        }
-      }
-      if (is_array($sort_order)) {
-        $order_by = implode(', ', $sort_order);
-      }
-      else {
-        $order_by = 'vip.bib_nr';
-      }
-
-      $sql ='SELECT ' . $distance_sql . 'vip.bib_nr, vip.navn, vip.navn_e, vip.navn_k, vip.navn_e_k, vip.type, vip.tlf_nr, vip.email, vip.badr,
-                    vip.bpostnr, vip.bcity, vip.isil, vip.kmd_nr, vip.url_homepage, vip.url_payment, vip.delete_mark,
-                    vip.afsaetningsbibliotek, vip.afsaetningsnavn_k, vip.p_nr, vip.uni_c_nr, vip.leder, vip.titel,
-                    TO_CHAR(vip.dato, \'YYYY-MM-DD\') "dato", TO_CHAR(vip.bs_dato, \'YYYY-MM-DD\') "bs_dato",
-                    vip.latitude, vip.longitude, vip.knudepunkt, vip.leder_samarb,  vip.titel_samarb,
-                    vip_vsn.navn vsn_navn, vip_vsn.bib_nr vsn_bib_nr, vip_vsn.bib_type vsn_bib_type,
-                    vip_vsn.email vsn_email, vip_vsn.tlf_nr vsn_tlf_nr, vip_vsn.fax_nr vsn_fax_nr,
-                    vip_vsn.leder vsn_leder, vip_vsn.titel vsn_titel, vip_vsn.koerselsordning,
-                    TO_CHAR(vip_vsn.dato, \'YYYY-MM-DD\') "vsn_dato", vip_vsn.oclc_symbol, vip_vsn.sb_kopibestil,
-                    vip_vsn.cvr_nr vsn_cvr_nr, vip_vsn.p_nr vsn_p_nr, vip_vsn.ean_nummer vsn_ean_nummer,
-                    vip_danbib.svar_email, vip_danbib.mailbestil_via, vip_danbib.best_txt,
-                    vip_beh.best_modt, vip_beh.best_modt_luk, vip_beh.best_modt_luk_eng,
-                    vip_txt.aabn_tid, vip_txt.kvt_tekst_fjl, vip_txt.service_tekst,
-                    vip_txt_eng.aabn_tid_e, vip_txt_eng.kvt_tekst_fjl_e, vip_bogbus_holdeplads.holdeplads,
-                    vip_bestil.url_serv_dkl, vip_bestil.support_email, vip_bestil.support_tlf, vip_bestil.ncip_address, vip_bestil.ncip_password,
-                    vip_kat.url_best_blanket, vip_kat.url_best_blanket_text, vip_kat.url_laanerstatus, vip_kat.ncip_lookup_user,
-                    vip_kat.ncip_renew, vip_kat.ncip_cancel, vip_kat.ncip_update_request, vip_kat.filial_vsn,
-                    vip_kat.url_viderestil, vip_kat.url_bib_kat
-               FROM vip
-               LEFT OUTER JOIN vip_vsn
-                 ON vip.kmd_nr = vip_vsn.bib_nr
-               LEFT OUTER JOIN vip_danbib
-                 ON vip_danbib.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_beh
-                 ON vip_beh.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_txt
-                 ON vip_txt.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_bogbus_holdeplads
-                 ON vip_bogbus_holdeplads.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_txt_eng
-                 ON vip_txt_eng.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_bestil
-                 ON vip_bestil.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_kat
-                 ON vip_kat.bib_nr = vip.bib_nr
-               LEFT OUTER JOIN vip_sup
-                 ON vip_sup.bib_nr = vip.bib_nr
-              WHERE ' . $filter_sql . '
-              ORDER BY ' . $order_by;
-      //var_dump($geoloc); var_dump($sorts); var_dump($distance_sql); die($sql);
-      $this->watch->start('sql1');
-      try {
-        $this->watch->start('sql1');
-        $oci->set_query($sql);
-        $this->watch->stop('sql1');
-        $this->watch->start('fetch');
-        $rows = $oci->fetch_all_into_assoc();
-        if (is_array($rows)) {
-          foreach ($rows as $row) {
-            if (empty($curr_bib)) {
-              $curr_bib = $row['BIB_NR'];
+        $this->watch->start('entry');
+        $oci = self::connect($this->config->get_value('agency_credentials', 'setup'), __LINE__, $res);
+        if (empty($res->error)) {
+            // agencyId
+            if ($agency_id = self::strip_agency($param->agencyId->_value)) {
+                $sqls[] = 'vip.bib_nr = :bind_bib_nr';
+                $oci->bind('bind_bib_nr', $agency_id);
             }
-            if ($curr_bib <> $row['BIB_NR']) {
-              if ($pickupAgency)
-                Object::set_array_value($res, 'pickupAgency', $pickupAgency);
-              unset($pickupAgency);
-              $curr_bib = $row['BIB_NR'];
+            // agencyName
+            if (!empty($param->agencyName) && $val = $param->agencyName->_value) {
+                $sqls[] = '(LOWER(vip.navn) SIMILAR TO :bind_navn)' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_navn AND vip_sup.type = :bind_n)';
+                $oci->bind('bind_navn', self::build_PostgreSQL_like($val));
+                $oci->bind('bind_n', 'N');
             }
-            if ($row && (empty($distance_sql) || ($row['DISTANCE'] && ($row['DISTANCE'] <= $distance)))) {
-              //$row['NAVN'] = $row['VSN_NAVN'];
-              self::fill_pickupAgency($pickupAgency, $row);
+            // agencyAddress
+            if (!empty($param->agencyAddress) && $val = $param->agencyAddress->_value) {
+                $sqls[] = '(LOWER(vip.badr) SIMILAR TO :bind_addr' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_addr AND vip_sup.type = :bind_a)' .
+                    ' OR LOWER(vip_vsn.badr) SIMILAR TO upper(:bind_addr))';
+                $oci->bind('bind_addr', self::build_PostgreSQL_like($val));
+                $oci->bind('bind_a', 'A');
             }
-          }
+            // postalCode
+            if (!empty($param->postalCode) && $val = $param->postalCode->_value) {
+                $sqls[] = '(LOWER(vip.bpostnr) SIMILAR TO :bind_postnr' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_postnr AND vip_sup.type = :bind_p))';
+                $oci->bind('bind_postnr', self::build_PostgreSQL_like($val));
+                $oci->bind('bind_p', 'P');
+            }
+
+            // city
+            if (!empty($param->city) && $val = $param->city->_value) {
+                $sqls[] = 'LOWER(vip.bcity) SIMILAR TO :bind_city';
+                $oci->bind('bind_city', self::build_PostgreSQL_like($val));
+            }
+
+            // stilNumber
+            if (!empty($param->stilNumber) && $val = $param->stilNumber->_value) {
+                $sqls[] = 'vip.uni_c_nr = :bind_uni_c_nr';
+                $oci->bind('bind_uni_c_nr', $val);
+            }
+
+            // anyField
+            if (!empty($param->anyField) && $val = $param->anyField->_value) {
+                $bib_nr = self::strip_agency($param->anyField->_value);
+                if (is_numeric($bib_nr) && (strlen($bib_nr) == 6)) {
+                    $oci->bind('bind_bib_nr', $bib_nr);
+                    $bibnr_sql = '(vip.bib_nr = :bind_bib_nr) OR ';
+                }
+                $sqls[] = '(' . $bibnr_sql .
+                    'LOWER(vip.navn) SIMILAR TO :bind_any' .
+                    ' OR LOWER(vip.badr) SIMILAR TO :bind_any' .
+                    ' OR LOWER(vip.bpostnr) SIMILAR TO :bind_any' .
+                    ' OR LOWER(vip.bcity) SIMILAR TO :bind_any' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_n)' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_a)' .
+                    ' OR (LOWER(vip_sup.tekst) SIMILAR TO :bind_any AND vip_sup.type = :bind_p))';
+                $oci->bind('bind_any', self::build_PostgreSQL_like($val));
+                $oci->bind('bind_a', 'A');
+                $oci->bind('bind_n', 'N');
+                $oci->bind('bind_p', 'P');
+            }
+
+            // libraryType
+            if ((!empty($param->libraryType) && $val = $param->libraryType->_value)
+                && ($param->libraryType->_value == 'Folkebibliotek'
+                    || $param->libraryType->_value == 'Forskningsbibliotek'
+                    || $param->libraryType->_value == 'Skolebibliotek'
+                    || $param->libraryType->_value == 'Other')) {
+                $sqls[] = 'vip_vsn.bib_type = :bind_bib_type';
+                $oci->bind('bind_bib_type', $param->libraryType->_value);
+            } elseif (empty($agency_id) && empty($param->stilNumber->_value)) {
+                $sqls[] = '(vip_vsn.bib_type != :bind_bib_type OR vip_vsn.bib_type IS null)';
+                $oci->bind('bind_bib_type', 'Skolebibliotek');
+            }
+
+            // libraryStatus
+            $libraryStatus_sql = 'vip.delete_mark is null';
+            if (!empty($param->libraryStatus)) {
+                if ($param->libraryStatus->_value == 'usynlig') {
+                    $oci->bind('bind_u', 'U');
+                    $libraryStatus_sql = 'vip.delete_mark = :bind_u';
+                } elseif ($param->libraryStatus->_value == 'slettet') {
+                    $oci->bind('bind_s', 'S');
+                    $libraryStatus_sql = 'vip.delete_mark = :bind_s';
+                } elseif ($param->libraryStatus->_value == 'aktive') {
+                    $oci->bind('bind_u', 'U');
+                    $libraryStatus_sql = '(vip.delete_mark = :bind_u OR vip.delete_mark is NULL)';
+                }
+            }
+            $sqls[] = $libraryStatus_sql;
+
+            // pickupAllowed
+            if (isset($param->pickupAllowed->_value)) {
+                $j = 'J';
+                $oci->bind('bind_j', $j);
+                if (self::xs_boolean($param->pickupAllowed->_value)) {
+                    $sqls[] .= 'vb.best_modt = :bind_j';
+                } else {
+                    $sqls[] .= 'vb.best_modt != :bind_j';
+                }
+            }
+            $filter_sql = implode(' AND ', $sqls);
+
+            // sort
+            $distance_sql = NULL;
+            $sort_order = NULL;
+            if (isset($param->sort)) {
+                if (is_array($param->sort)) {
+                    $sorts = $param->sort;
+                } else {
+                    $sorts = array($param->sort);
+                }
+                foreach ($sorts as $s) {
+                    switch ($s->_value) {
+                        case 'agencyId':
+                            $sort_order[] = 'vip.bib_nr';
+                            break;
+                        case 'agencyName':
+                            $sort_order[] = 'vip.navn';
+                            break;
+                        case 'agencyAddress':
+                            $sort_order[] = 'vip.badr';
+                            break;
+                        case 'postalCode':
+                            $sort_order[] = 'vip.postnr';
+                            break;
+                        case 'city':
+                            $sort_order[] = 'vip.bcity';
+                            break;
+                        case 'libraryType':
+                            $sort_order[] = 'vip_vsn.bib_type';
+                            break;
+                    }
+                }
+                if ((count($sorts) == 1) && ($sorts[0]->_value == 'distance') && isset($geoloc->latitude->_value) && isset($geoloc->latitude->_value)) {
+                    if (!$distance = intval($geoloc->distanceInMeter->_value)) {
+                        $distance = 500000;
+                    }
+                    $sort_order[] = 'distance asc';
+                    $deg2rad = 0.0174532925;
+                    $rad2deg = 57.2957795;
+                    $deg2meter = 111045;
+                    $latitude = $geoloc->latitude->_value;
+                    $longitude = $geoloc->longitude->_value;
+                    // Flat earth society:
+                    //$distance_sql = "$deg2meter * SQRT(POWER(vip.latitude-$latitude,2) + POWER(vip.longitude-$longitude,2)) distance, ";
+                    // Haversine: https://en.wikipedia.org/wiki/Haversine_formula
+                    $distance_sql = "$deg2meter * $rad2deg * (ACOS(COS($deg2rad*$latitude) * COS($deg2rad*vip.latitude) * COS($deg2rad*($longitude-vip.longitude)) + SIN($deg2rad*$latitude) * SIN($deg2rad*vip.latitude))) distance, ";
+                }
+            }
+            if (is_array($sort_order)) {
+                $order_by = implode(', ', $sort_order);
+            } else {
+                $order_by = 'vip.bib_nr';
+            }
+
+            $sql = 'SELECT ' . $distance_sql . 'vip.bib_nr, vip.navn, vip.navn_e, vip.navn_k, vip.navn_e_k, vip.type, vip.tlf_nr, vip.email, vip.badr,
+                      vip.bpostnr, vip.bcity, vip.isil, vip.kmd_nr, vip.url_homepage, vip.url_payment, vip.delete_mark,
+                      vip.afsaetningsbibliotek, vip.afsaetningsnavn_k, vip.p_nr, vip.uni_c_nr, vip.leder, vip.titel,
+                      TO_CHAR(vip.dato, \'YYYY-MM-DD\') "dato", TO_CHAR(vip.bs_dato, \'YYYY-MM-DD\') "bs_dato",
+                      vip.latitude, vip.longitude, vip.knudepunkt, vip.leder_samarb,  vip.titel_samarb,
+                      vip_vsn.navn vsn_navn, vip_vsn.bib_nr vsn_bib_nr, vip_vsn.bib_type vsn_bib_type,
+                      vip_vsn.email vsn_email, vip_vsn.tlf_nr vsn_tlf_nr, vip_vsn.fax_nr vsn_fax_nr,
+                      vip_vsn.leder vsn_leder, vip_vsn.titel vsn_titel, vip_vsn.koerselsordning,
+                      TO_CHAR(vip_vsn.dato, \'YYYY-MM-DD\') "vsn_dato", vip_vsn.oclc_symbol, vip_vsn.sb_kopibestil,
+                      vip_vsn.cvr_nr vsn_cvr_nr, vip_vsn.p_nr vsn_p_nr, vip_vsn.ean_nummer vsn_ean_nummer,
+                      vip_danbib.svar_email, vip_danbib.mailbestil_via, vip_danbib.best_txt,
+                      vip_beh.best_modt, vip_beh.best_modt_luk, vip_beh.best_modt_luk_eng,
+                      vip_txt.aabn_tid, vip_txt.kvt_tekst_fjl, vip_txt.service_tekst,
+                      vip_txt_eng.aabn_tid_e, vip_txt_eng.kvt_tekst_fjl_e, vip_bogbus_holdeplads.holdeplads,
+                      vip_bestil.url_serv_dkl, vip_bestil.support_email, vip_bestil.support_tlf, vip_bestil.ncip_address, vip_bestil.ncip_password,
+                      vip_kat.url_best_blanket, vip_kat.url_best_blanket_text, vip_kat.url_laanerstatus, vip_kat.ncip_lookup_user,
+                      vip_kat.ncip_renew, vip_kat.ncip_cancel, vip_kat.ncip_update_request, vip_kat.filial_vsn,
+                      vip_kat.url_viderestil, vip_kat.url_bib_kat
+                 FROM vip
+                 LEFT OUTER JOIN vip_vsn
+                   ON vip.kmd_nr = vip_vsn.bib_nr
+                 LEFT OUTER JOIN vip_danbib
+                   ON vip_danbib.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_beh
+                   ON vip_beh.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_txt
+                   ON vip_txt.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_bogbus_holdeplads
+                   ON vip_bogbus_holdeplads.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_txt_eng
+                   ON vip_txt_eng.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_bestil
+                   ON vip_bestil.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_kat
+                   ON vip_kat.bib_nr = vip.bib_nr
+                 LEFT OUTER JOIN vip_sup
+                   ON vip_sup.bib_nr = vip.bib_nr
+                WHERE ' . $filter_sql . '
+                ORDER BY ' . $order_by;
+            //var_dump($geoloc); var_dump($sorts); var_dump($distance_sql); die($sql);
+            $this->watch->start('sql1');
+            try {
+                $this->watch->start('sql1');
+                $oci->set_query($sql);
+                $this->watch->stop('sql1');
+                $this->watch->start('fetch');
+                $rows = $oci->fetch_all_into_assoc();
+                if (is_array($rows)) {
+                    foreach ($rows as $row) {
+                        if (empty($curr_bib)) {
+                            $curr_bib = $row['BIB_NR'];
+                        }
+                        if ($curr_bib <> $row['BIB_NR']) {
+                            if ($pickupAgency)
+                                Object::set_array_value($res, 'pickupAgency', $pickupAgency);
+                            unset($pickupAgency);
+                            $curr_bib = $row['BIB_NR'];
+                        }
+                        if ($row && (empty($distance_sql) || ($row['DISTANCE'] && ($row['DISTANCE'] <= $distance)))) {
+                            //$row['NAVN'] = $row['VSN_NAVN'];
+                            self::fill_pickupAgency($pickupAgency, $row);
+                        }
+                    }
+                }
+                $this->watch->stop('fetch');
+                if ($pickupAgency) {
+                    Object::set_array_value($res, 'pickupAgency', $pickupAgency);
+                }
+            } catch (fetException $e) {
+                $this->watch->stop('sql1');
+                VerboseJson::log(FATAL, 'OpenAgency(' . __LINE__ . '):: DB select error: ' . $e->getMessage());
+                Object::set_value($res, 'error', 'service_unavailable');
+            }
+            $this->watch->stop('sql1');
         }
-        $this->watch->stop('fetch');
-        if ($pickupAgency) {
-          Object::set_array_value($res, 'pickupAgency', $pickupAgency);
-        }
-      }
-      catch (ociException $e) {
-        $this->watch->stop('sql1');
-        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
-        Object::set_value($res, 'error', 'service_unavailable');
-      }
-      $this->watch->stop('sql1');
     }
     //var_dump($res); var_dump($param); die();
     Object::set_value($ret, 'findLibraryResponse', $res);
@@ -2043,9 +2052,9 @@ class openAgency extends webServiceServer {
             $this->watch->stop('fetch');
             //$this->watch->sums['mem'] = memory_get_usage() - $mem;
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             if ($oci->error['code'] == 904) {
               Object::set_value($res, 'error', 'error_in_request');
             } else {
@@ -2107,9 +2116,9 @@ class openAgency extends webServiceServer {
           $this->watch->stop('fetch');
           //$this->watch->sums['mem'] = memory_get_usage() - $mem;
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -2171,8 +2180,8 @@ class openAgency extends webServiceServer {
               unset($o);
             }
           }
-          catch (ociException $e) {
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          catch (fetException $e) {
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
           $this->watch->stop('sql1');
@@ -2526,11 +2535,11 @@ class openAgency extends webServiceServer {
               Object::set_value($res, 'error', 'no_agencies_found');
             }
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2555,41 +2564,43 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       Object::set_value($res, 'error', 'authentication_error');
     else {
-      $agency = self::strip_agency($param->agencyId->_value);
-      $cache_key = 'OA_BT' . $this->config->get_inifile_hash() . $agency;
-      self::set_cache_expire($this->cache_expire[__FUNCTION__]);
-      if ($ret = $this->cache->get($cache_key)) {
-        VerboseJson::log(STAT, 'Cache hit');
-        return $ret;
-      }
-      $this->watch->start('entry');
-      $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
-      if ($agency) {
-        $oci->bind('bind_bib_nr', $agency);
-        $where .= ' WHERE bib_nr = :bind_bib_nr';
-      }
-      $sql = 'SELECT bib_nr, head, text FROM vip_bob_stdsvar ' . $where . ' ORDER BY bib_nr, head';
-      $this->watch->start('sql');
-      $oci->set_query($sql);
-      $this->watch->stop('sql');
-      $this->watch->start('fetch');
-      $ip_list = array();
-      $rows = $oci->fetch_all_into_assoc();
-      foreach ($rows as $row) {
-        $texts[$row['BIB_NR']][] = $row;
-      }
-      $this->watch->stop('fetch');
-      foreach ($texts as $bib => $bib_texts) {
-        Object::set_value($bib_obj, 'agencyId', self::normalize_agency($bib));
-        foreach ($bib_texts as  $text) {
-          Object::set_value($txt_obj, 'label', $text['HEAD']);
-          Object::set_value($txt_obj, 'text', $text['TEXT']);
-          Object::set_array_value($bib_obj, 'texts', $txt_obj);
-          unset($txt_obj);
+        $agency = self::strip_agency($param->agencyId->_value);
+        $cache_key = 'OA_BT' . $this->config->get_inifile_hash() . $agency;
+        self::set_cache_expire($this->cache_expire[__FUNCTION__]);
+        if ($ret = $this->cache->get($cache_key)) {
+            VerboseJson::log(STAT, 'Cache hit');
+            return $ret;
         }
-        Object::set_array_value($res, 'bobTextsAgency', $bib_obj);
-        unset($bib_obj);
-      }
+        $this->watch->start('entry');
+        $oci = self::connect($this->config->get_value('agency_credentials', 'setup'), __LINE__, $res);
+        if (empty($res->error)) {
+            if ($agency) {
+                $oci->bind('bind_bib_nr', $agency);
+                $where .= ' WHERE bib_nr = :bind_bib_nr';
+            }
+            $sql = 'SELECT bib_nr, head, text FROM vip_bob_stdsvar ' . $where . ' ORDER BY bib_nr, head';
+            $this->watch->start('sql');
+            $oci->set_query($sql);
+            $this->watch->stop('sql');
+            $this->watch->start('fetch');
+            $ip_list = array();
+            $rows = $oci->fetch_all_into_assoc();
+            foreach ($rows as $row) {
+                $texts[$row['BIB_NR']][] = $row;
+            }
+            $this->watch->stop('fetch');
+            foreach ($texts as $bib => $bib_texts) {
+                Object::set_value($bib_obj, 'agencyId', self::normalize_agency($bib));
+                foreach ($bib_texts as $text) {
+                    Object::set_value($txt_obj, 'label', $text['HEAD']);
+                    Object::set_value($txt_obj, 'text', $text['TEXT']);
+                    Object::set_array_value($bib_obj, 'texts', $txt_obj);
+                    unset($txt_obj);
+                }
+                Object::set_array_value($res, 'bobTextsAgency', $bib_obj);
+                unset($bib_obj);
+            }
+        }
     }
     //var_dump($sql); var_dump($res); var_dump($param); die();
     Object::set_value($ret, 'bobTextsResponse', $res);
@@ -2788,8 +2799,8 @@ class openAgency extends webServiceServer {
               }
             }
           }
-          catch (ociException $e) {
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          catch (fetException $e) {
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         } else {
@@ -2817,12 +2828,12 @@ class openAgency extends webServiceServer {
             }
             $this->watch->stop('fetch4');
           }
-          catch (ociException $e) {
+          catch (fetException $e) {
             $this->watch->stop('sql1');
             $this->watch->stop('sql2');
             $this->watch->stop('sql3');
             $this->watch->stop('sql4');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
             Object::set_value($res, 'error', 'service_unavailable');
           }
         }
@@ -2931,9 +2942,9 @@ class openAgency extends webServiceServer {
             unset($s);
           }
         }
-        catch (ociException $e) {
+        catch (fetException $e) {
           $this->watch->stop('sql1');
-          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+          VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
         }
       }
@@ -3023,7 +3034,7 @@ class openAgency extends webServiceServer {
   /* ----------------------------------------------------------------------------- */
 
 
-  /** \brief get a oci connection
+  /** \brief get a connection to the database
    *
    * @param string $credentials
    * @param object $error
@@ -3034,10 +3045,10 @@ class openAgency extends webServiceServer {
     $psql->set_charset('UTF8');
     $this->watch->start('connect');
     try {
-      $psql->connect();
+      $psql->open();
     }
     catch (fetException $e) {
-      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: psql connect error: ' . $psql->get_error_string());
+      VerboseJson::log(FATAL, 'OpenAgency('. $line .'):: psql connect error: ' . $e->getMessage());
       Object::set_value($error, 'error', 'service_unavailable');
     }
     $this->watch->stop('connect');
@@ -3070,9 +3081,9 @@ class openAgency extends webServiceServer {
         if (empty($res->agencyId)) {
           Object::set_value($res, 'error', 'no_agencies_found');
         }
-      } catch (ociException $e) {
+      } catch (fetException $e) {
         $this->watch->stop('sql1');
-        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: OCI select error: ' . $oci->get_error_string());
+        VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
         Object::set_value($res, 'error', 'service_unavailable');
       }
     }

@@ -140,7 +140,7 @@ function checkServiceMatch() {
     RES=$(curl -s -o ${OUTPUT} -m 5 -w "%{http_code}" "${URL}" 2>/dev/null)
     if [[ "$RES" == *200 ]] ; then
         if grep "${MATCH}" "${OUTPUT}" &> /dev/null ; then
-            info "Match against ${MATCH} found in service output. Service is OK"
+            info "Match against '${MATCH}' found in service output. Service is OK"
             debug "output: '$(cat ${OUTPUT})'"
             return 0
         fi
@@ -194,9 +194,14 @@ function waitForOk() {
   # docker kill ${VIP_POSTGRES_CONTAINERID} || die "Unable to kill postgres container"
 
   # This uses "service"
+  info "Checking openagency.service call"
   checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found
   # But, we also want this, to check the log when debugging.
+  info "Checking openagency.service call basic"
   checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
+  # This is related to VP-262
+  info "Checking openagency.openSearchProfile call with missing agencyId"
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
 }
 
 # Print info about how to stop containers.

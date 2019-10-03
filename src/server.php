@@ -2705,136 +2705,138 @@ class openAgency extends webServiceServer {
       $this->watch->start('preamble');
       $sql_add = NULL;
       $agency = self::strip_agency($param->agencyId->_value);
-      $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
-      self::set_cache_expire($this->cache_expire[__FUNCTION__]);
-      if ($ret = $this->cache->get($cache_key)) {
-        VerboseJson::log(STAT, 'Cache hit');
+      if (empty($agency)) {
+        Object::set_value($res, 'error', 'agency_not_found');
         $this->watch->stop('preamble');
-        return $ret;
-      }
-      $this->watch->stop('preamble');
-      $this->watch->start('entry');
-      $oci = self::connect($this->config->get_value('agency_credentials','setup'), __LINE__, $res);
-      if (empty($res->error)) {
-        if ($param->profileVersion->_value == 3) {
-          try {
-            // hent alle broend_to_kilder med searchable == "Y" og loop over dem.
-            // find de kilder som profilen kender:
-            // Søgbarheden (sourceSearchable) gives hvis den findes i den givne profil (broendkilde_id findes)
-            // Søgbargeden kan evt. begrænses af broend_to_kilder.access_for
-            $oci->bind('bind_y', 'Y');
-            $this->watch->start('sql1');
-            $oci->set_query('SELECT * FROM (
+      } else {
+        $cache_key = 'OA_opeSP_' . $this->config->get_inifile_hash() . $agency . $param->profileName->_value . $param->profileVersion->_value;
+        self::set_cache_expire($this->cache_expire[__FUNCTION__]);
+        if ($ret = $this->cache->get($cache_key)) {
+          VerboseJson::log(STAT, 'Cache hit');
+          $this->watch->stop('preamble');
+          return $ret;
+        }
+        $this->watch->stop('preamble');
+        $this->watch->start('entry');
+        $oci = self::connect($this->config->get_value('agency_credentials', 'setup'), __LINE__, $res);
+        if (empty($res->error)) {
+          if ($param->profileVersion->_value == 3) {
+            try {
+              // hent alle broend_to_kilder med searchable == "Y" og loop over dem.
+              // find de kilder som profilen kender:
+              // Søgbarheden (sourceSearchable) gives hvis den findes i den givne profil (broendkilde_id findes)
+              // Søgbargeden kan evt. begrænses af broend_to_kilder.access_for
+              $oci->bind('bind_y', 'Y');
+              $this->watch->start('sql1');
+              $oci->set_query('SELECT * FROM (
                                SELECT DISTINCT on (id_nr) *
                                FROM broend_to_kilder
                                WHERE searchable = :bind_y
                                ORDER BY id_nr, name
                              ) T
                              ORDER BY name ASC');
-            $kilder = $oci->fetch_all_into_assoc();
-            $this->watch->stop('sql1');
-            $oci->bind('bind_agency', $agency);
-            if ($profile = mb_strtolower($param->profileName->_value)) {
-              $oci->bind('bind_profile', $profile);
-              $sql_add = ' AND lower(broend_to_profiler.name) = :bind_profile';
-            }
-            $this->watch->start('sql2');
-            $oci->set_query('SELECT broendkilde_id, profil_id, name, add_to_query
+              $kilder = $oci->fetch_all_into_assoc();
+              $this->watch->stop('sql1');
+              $oci->bind('bind_agency', $agency);
+              if ($profile = mb_strtolower($param->profileName->_value)) {
+                $oci->bind('bind_profile', $profile);
+                $sql_add = ' AND lower(broend_to_profiler.name) = :bind_profile';
+              }
+              $this->watch->start('sql2');
+              $oci->set_query('SELECT broendkilde_id, profil_id, name, add_to_query
                                FROM broend_to_profiler
                                LEFT OUTER JOIN broendprofil_to_kilder
                                  ON broendprofil_to_kilder.profil_id = broend_to_profiler.id_nr
                               WHERE broend_to_profiler.bib_nr = :bind_agency
                                 AND broendprofil_to_kilder.broendkilde_id IS NOT NULL
                                 AND broendprofil_to_kilder.profil_id IS NOT NULL' . $sql_add);
-            $profil_res = $oci->fetch_all_into_assoc();
-            $this->watch->stop('sql2');
-            $profiler = array();
-            foreach ($profil_res as $p) {
-              if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
-                $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+              $profil_res = $oci->fetch_all_into_assoc();
+              $this->watch->stop('sql2');
+              $profiler = array();
+              foreach ($profil_res as $p) {
+                if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
+                  $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+                }
               }
-            }
-            foreach ($profiler as $profil_no => $profil) {
-              $profile_name = '';
-              foreach ($kilder as $kilde) {
-                if (empty($kilde['ACCESS_FOR']) || strpos($kilde['ACCESS_FOR'], $agency) !== FALSE) {
-                  $oci->bind('bind_kilde_id', $kilde['ID_NR']);
-                  $oci->bind('bind_profil_id', $profil_no);
-                  $this->watch->start('sql3');
-                  $oci->set_query('SELECT DISTINCT rdf, rdf_reverse
+              foreach ($profiler as $profil_no => $profil) {
+                $profile_name = '';
+                foreach ($kilder as $kilde) {
+                  if (empty($kilde['ACCESS_FOR']) || strpos($kilde['ACCESS_FOR'], $agency) !== FALSE) {
+                    $oci->bind('bind_kilde_id', $kilde['ID_NR']);
+                    $oci->bind('bind_profil_id', $profil_no);
+                    $this->watch->start('sql3');
+                    $oci->set_query('SELECT DISTINCT rdf, rdf_reverse
                                      FROM broend_relation, broend_kilde_relation, broend_profil_kilde_relation
                                     WHERE broend_kilde_relation.broendkilde_id = :bind_kilde_id
                                       AND broend_profil_kilde_relation.profil_id = :bind_profil_id
                                       AND broend_profil_kilde_relation.kilde_relation_id = broend_kilde_relation.id_nr
                                       AND broend_kilde_relation.relation_id = broend_relation.id_nr');
-                  $relations = $oci->fetch_all_into_assoc();
-                  $this->watch->stop('sql3');
-                  Object::set_value($s, 'sourceName', $kilde['NAME']);
-                  if (isset($profil[$kilde['ID_NR']])) {
-                    $profile_name = $profil[$kilde['ID_NR']]['NAME'];
-                    $add_to_query = $profil[$kilde['ID_NR']]['ADD_TO_QUERY'];
-                    Object::set_value($s, 'sourceSearchable', '1');
-                  }
-                  else
-                    Object::set_value($s, 'sourceSearchable', '0');
-                  Object::set_value($s, 'sourceContainedIn', $kilde['CONTAINED_IN'], FALSE);
-                  Object::set_value($s, 'sourceIdentifier', str_replace('[agency]', $agency, $kilde['IDENTIFIER']));
-                  if ($relations) {
-                    foreach ($relations as $relation) {
-                      Object::set_value($rel, 'rdfLabel', $relation['RDF']);
-                      Object::set_value($rel, 'rdfInverse', $relation['RDF_REVERSE'], FALSE);
-                      Object::set_array_value($s, 'relation', $rel);
-                      unset($rel);
+                    $relations = $oci->fetch_all_into_assoc();
+                    $this->watch->stop('sql3');
+                    Object::set_value($s, 'sourceName', $kilde['NAME']);
+                    if (isset($profil[$kilde['ID_NR']])) {
+                      $profile_name = $profil[$kilde['ID_NR']]['NAME'];
+                      $add_to_query = $profil[$kilde['ID_NR']]['ADD_TO_QUERY'];
+                      Object::set_value($s, 'sourceSearchable', '1');
+                    } else
+                      Object::set_value($s, 'sourceSearchable', '0');
+                    Object::set_value($s, 'sourceContainedIn', $kilde['CONTAINED_IN'], FALSE);
+                    Object::set_value($s, 'sourceIdentifier', str_replace('[agency]', $agency, $kilde['IDENTIFIER']));
+                    if ($relations) {
+                      foreach ($relations as $relation) {
+                        Object::set_value($rel, 'rdfLabel', $relation['RDF']);
+                        Object::set_value($rel, 'rdfInverse', $relation['RDF_REVERSE'], FALSE);
+                        Object::set_array_value($s, 'relation', $rel);
+                        unset($rel);
+                      }
                     }
                   }
-                }
-                Object::set_value($res->profile[$profil_no]->_value, 'profileName', $profile_name);
-                if ($add_to_query) {
-                  Object::set_value($res->profile[$profil_no]->_value, 'addToQuery', $add_to_query);
-                }
-                if ($s) {
-                  Object::set_array_value($res->profile[$profil_no]->_value, 'source', $s);
-                  unset($s);
+                  Object::set_value($res->profile[$profil_no]->_value, 'profileName', $profile_name);
+                  if ($add_to_query) {
+                    Object::set_value($res->profile[$profil_no]->_value, 'addToQuery', $add_to_query);
+                  }
+                  if ($s) {
+                    Object::set_array_value($res->profile[$profil_no]->_value, 'source', $s);
+                    unset($s);
+                  }
                 }
               }
+            } catch (fetException $e) {
+              VerboseJson::log(FATAL, 'OpenAgency(' . __LINE__ . '):: DB select error: ' . $e->getMessage());
+              Object::set_value($res, 'error', 'service_unavailable');
             }
-          }
-          catch (fetException $e) {
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
-            Object::set_value($res, 'error', 'service_unavailable');
-          }
-        } else {
-          $oci->bind('bind_agency', $agency);
-          if ($profile = mb_strtolower($param->profileName->_value)) {
-            $oci->bind('bind_profile', $profile);
-            $sql_add = ' AND lower(broendprofiler.name) = :bind_profile';
-          }
-          try {
-            $this->watch->start('sql4');
-            $oci->set_query('SELECT DISTINCT broendprofiler.name bp_name, broendkilder.name, submitter, format
+          } else {
+            $oci->bind('bind_agency', $agency);
+            if ($profile = mb_strtolower($param->profileName->_value)) {
+              $oci->bind('bind_profile', $profile);
+              $sql_add = ' AND lower(broendprofiler.name) = :bind_profile';
+            }
+            try {
+              $this->watch->start('sql4');
+              $oci->set_query('SELECT DISTINCT broendprofiler.name bp_name, broendkilder.name, submitter, format
                                FROM broendkilder, broendprofil_kilder, broendprofiler
                               WHERE broendkilder.id_nr = broendprofil_kilder.broendkilde_id
                                 AND broendprofil_kilder.profil_id = broendprofiler.id_nr
                                 AND broendprofiler.bib_nr = :bind_agency' . $sql_add);
-            $this->watch->stop('sql4');
-            $this->watch->start('fetch4');
-            while ($s_row = $oci->fetch_into_assoc()) {
-              Object::set_value($s, 'sourceName', $s_row['NAME']);
-              Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
-              Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
-              Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
-              Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
-              unset($s);
+              $this->watch->stop('sql4');
+              $this->watch->start('fetch4');
+              while ($s_row = $oci->fetch_into_assoc()) {
+                Object::set_value($s, 'sourceName', $s_row['NAME']);
+                Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
+                Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
+                Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
+                Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
+                unset($s);
+              }
+              $this->watch->stop('fetch4');
+            } catch (fetException $e) {
+              $this->watch->stop('sql1');
+              $this->watch->stop('sql2');
+              $this->watch->stop('sql3');
+              $this->watch->stop('sql4');
+              VerboseJson::log(FATAL, 'OpenAgency(' . __LINE__ . '):: DB select error: ' . $e->getMessage());
+              Object::set_value($res, 'error', 'service_unavailable');
             }
-            $this->watch->stop('fetch4');
-          }
-          catch (fetException $e) {
-            $this->watch->stop('sql1');
-            $this->watch->stop('sql2');
-            $this->watch->stop('sql3');
-            $this->watch->stop('sql4');
-            VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
-            Object::set_value($res, 'error', 'service_unavailable');
           }
         }
       }

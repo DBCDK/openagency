@@ -111,5 +111,7 @@ ln -sf /proc/self/fd/2 /var/log/apache2/error.log  || die "Unable to link error 
 /etc/init.d/memcached start
 
 # Start Apache, and let it take it from there.
-info "Starting Apache"
-/usr/sbin/apache2ctl -D FOREGROUND
+info "Starting Apache the Old hacked Way "
+export APACHE_RUN_DIR=/var/run/apache2
+export APACHE_CONFDIR=/etc/apache2/
+/usr/sbin/apache2 -DFOREGROUND

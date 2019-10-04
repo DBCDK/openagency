@@ -114,4 +114,11 @@ ln -sf /proc/self/fd/2 /var/log/apache2/error.log  || die "Unable to link error 
 info "Starting Apache the Old hacked Way "
 export APACHE_RUN_DIR=/var/run/apache2
 export APACHE_CONFDIR=/etc/apache2/
-/usr/sbin/apache2 -DFOREGROUND
+# the path to the environment variable file
+APACHE_ENVVARS="$APACHE_CONFDIR/envvars"
+# pick up any necessary environment variables
+if test -f $APACHE_ENVVARS; then
+  . $APACHE_ENVVARS
+fi
+
+exec /usr/sbin/apache2 -DFOREGROUND

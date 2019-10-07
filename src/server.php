@@ -286,11 +286,13 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $vk_rows = $oci->fetch_all_into_assoc();
-          foreach ($vk_rows as $vk_row) {
-            Object::set_value($b, 'agencyName', $vk_row['NAVN']);
-            Object::set_value($b, 'isil', 'DK-' . $vk_row['BIB_NR']);
-            Object::set_array_value($res, 'borrowerCheckLibrary', $b);
-            unset($b);
+          if (is_array($vk_rows)) {
+            foreach ($vk_rows as $vk_row) {
+              Object::set_value($b, 'agencyName', $vk_row['NAVN']);
+              Object::set_value($b, 'isil', 'DK-' . $vk_row['BIB_NR']);
+              Object::set_array_value($res, 'borrowerCheckLibrary', $b);
+              unset($b);
+            }
           }
           $this->watch->stop('fetch');
         }
@@ -346,15 +348,17 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $vk_rows = $oci->fetch_all_into_assoc();
-          foreach ($vk_rows as $vk_row) {
-            Object::set_value($o, 'encrypt', 'YES');
-            Object::set_value($o, 'email', $param->email->_value);
-            Object::set_value($o, 'agencyId', $vk_row['BIBLIOTEK']);
-            Object::set_value($o, 'key', $vk_row['KEY']);
-            Object::set_value($o, 'base64', ($vk_row['NOTBASE64'] == 'ja' ? 'NO' : 'YES'));
-            Object::set_value($o, 'date', $vk_row['UDL_DATO']);
-            Object::set_array_value($res, 'encryption', $o);
-            unset($o);
+          if (is_array($vk_rows)) {
+            foreach ($vk_rows as $vk_row) {
+              Object::set_value($o, 'encrypt', 'YES');
+              Object::set_value($o, 'email', $param->email->_value);
+              Object::set_value($o, 'agencyId', $vk_row['BIBLIOTEK']);
+              Object::set_value($o, 'key', $vk_row['KEY']);
+              Object::set_value($o, 'base64', ($vk_row['NOTBASE64'] == 'ja' ? 'NO' : 'YES'));
+              Object::set_value($o, 'date', $vk_row['UDL_DATO']);
+              Object::set_array_value($res, 'encryption', $o);
+              unset($o);
+            }
           }
           $this->watch->stop('fetch');
           if (empty($res)) {
@@ -434,13 +438,15 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql1');
             $this->watch->start('fetch');
             $vb_rows = $oci->fetch_all_into_assoc();
-            foreach ($vb_rows as $vb_row) {
-              Object::set_value($res, 'willReceive',
-                ($vb_row['BEST_MODT'] == 'J' && ($vb_row['WR'] == 'J' || $vb_row['WR'] == 'B') ? 1 : 0));
-              if ($vb_row['WR'] == 'B') {
-                $col = $assoc[$mat_type][1] . $fjernl;
-                self::array_append_value_and_language($res->condition, $vb_row[$col], 'dan');
-                self::array_append_value_and_language($res->condition, $vb_row[$col.'_E'], 'eng');
+            if (is_array($vb_rows)) {
+              foreach ($vb_rows as $vb_row) {
+                Object::set_value($res, 'willReceive',
+                    ($vb_row['BEST_MODT'] == 'J' && ($vb_row['WR'] == 'J' || $vb_row['WR'] == 'B') ? 1 : 0));
+                if ($vb_row['WR'] == 'B') {
+                  $col = $assoc[$mat_type][1] . $fjernl;
+                  self::array_append_value_and_language($res->condition, $vb_row[$col], 'dan');
+                  self::array_append_value_and_language($res->condition, $vb_row[$col . '_E'], 'eng');
+                }
               }
             }
             $this->watch->stop('fetch');
@@ -671,31 +677,32 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $rows = $oci->fetch_all_into_assoc();
-          foreach ($rows as $row) {
-            if (empty($curr_bib)) {
-              $curr_bib = $row['BIB_NR'];
-            }
-            if ($curr_bib <> $row['BIB_NR']) {
-              Object::set_array_value($res, 'registryInfo', $registryInfo);
-              unset($registryInfo);
-              $curr_bib = $row['BIB_NR'];
-            }
-            if ($row) {
-              self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
-              $dbc_target = $this->config->get_value('dbc_target', 'setup');
-              if ($row['HOLDINGSFORMAT'] == 'B') {
-                self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
-                self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
+          if (is_array($rows)) {
+            foreach ($rows as $row) {
+              if (empty($curr_bib)) {
+                $curr_bib = $row['BIB_NR'];
               }
-              if ($row['MAILBESTIL_VIA'] == 'C') {
-                self::set_z3950Ill($registryInfo, $row);
+              if ($curr_bib <> $row['BIB_NR']) {
+                Object::set_array_value($res, 'registryInfo', $registryInfo);
+                unset($registryInfo);
+                $curr_bib = $row['BIB_NR'];
               }
-              elseif ($row['MAILBESTIL_VIA'] == 'E') {
-                self::set_iso18626($registryInfo, $row);
-                if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
+              if ($row) {
+                self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
+                $dbc_target = $this->config->get_value('dbc_target', 'setup');
+                if ($row['HOLDINGSFORMAT'] == 'B') {
                   self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                  self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
                 }
-                self::set_z3950Ill($registryInfo, $row, FALSE);
+                if ($row['MAILBESTIL_VIA'] == 'C') {
+                  self::set_z3950Ill($registryInfo, $row);
+                } elseif ($row['MAILBESTIL_VIA'] == 'E') {
+                  self::set_iso18626($registryInfo, $row);
+                  if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
+                    self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                  }
+                  self::set_z3950Ill($registryInfo, $row, FALSE);
+                }
               }
             }
           }
@@ -761,26 +768,27 @@ class openAgency extends webServiceServer {
           $last_bib = '';
           $this->watch->start('fetch');
           $rows = $oci->fetch_all_into_assoc();
-          foreach ($rows as $sl_row) {
-            if ($last_lib != $sl_row['BIB_NR']) {
-              if ($last_lib) {
-                Object::set_array_value($res, 'saouLicenseInfo', $sl);
-                unset($sl);
+          if (is_array($rows)) {
+            foreach ($rows as $sl_row) {
+              if ($last_lib != $sl_row['BIB_NR']) {
+                if ($last_lib) {
+                  Object::set_array_value($res, 'saouLicenseInfo', $sl);
+                  unset($sl);
+                }
+                $last_lib = $sl_row['BIB_NR'];
+                Object::set_value($sl, 'agencyId', $sl_row['BIB_NR']);
+                if ($sl_row['PROXYURL']) {
+                  Object::set_value($sl, 'proxyUrl', $sl_row['PROXYURL']);
+                }
               }
-              $last_lib = $sl_row['BIB_NR'];
-              Object::set_value($sl, 'agencyId', $sl_row['BIB_NR']);
-              if ($sl_row['PROXYURL']) {
-                Object::set_value($sl, 'proxyUrl', $sl_row['PROXYURL']);
-              }
+              Object::set_array_value($sl, 'ipAddress', $sl_row['DOMAIN']);
             }
-            Object::set_array_value($sl, 'ipAddress', $sl_row['DOMAIN']);
           }
           $this->watch->stop('fetch');
           if ($sl) {
             Object::set_array_value($res, 'saouLicenseInfo', $sl);
           }
-        }
-        catch (fetException $e) {
+        } catch (fetException $e) {
           $this->watch->stop('sql1');
           VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');
@@ -858,9 +866,11 @@ class openAgency extends webServiceServer {
           $profil_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql2');
           $profiles = array();
-          foreach ($profil_res as $pr) {
-            if ($pr['PROFIL_ID'] && $pr['BROENDKILDE_ID']) {
-              $profiles[$pr['BIB_NR']][$pr['PROFIL_ID']][$pr['NAME']][] = $pr['BROENDKILDE_ID'];
+          if (is_array($profil_res)) {
+            foreach ($profil_res as $pr) {
+              if ($pr['PROFIL_ID'] && $pr['BROENDKILDE_ID']) {
+                $profiles[$pr['BIB_NR']][$pr['PROFIL_ID']][$pr['NAME']][] = $pr['BROENDKILDE_ID'];
+              }
             }
           }
           foreach ($profiles as $agency => $agency_profiles) {
@@ -2378,9 +2388,11 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql1');
             $this->watch->start('fetch1');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              $bib_nr = &$row['BIB_NR'];
-              $vsn[$bib_nr] = $row;
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                $bib_nr = &$row['BIB_NR'];
+                $vsn[$bib_nr] = $row;
+              }
             }
             $this->watch->stop('fetch1');
 
@@ -2484,38 +2496,40 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql3');
             $this->watch->start('fetch3');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              if ($ora_par['agencyId']) {
-                $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
-                if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                if ($ora_par['agencyId']) {
+                  $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
+                  if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
+                }
+                $this_vsn = $row['KMD_NR'];
+                if ($library && $library->agencyId->_value <> $this_vsn) {
+                  Object::set_array_value($library, 'pickupAgency', $pickupAgency);
+                  unset($pickupAgency);
+                  Object::set_array_value($res, 'library', $library);
+                  unset($library);
+                }
+                if (empty($library)) {
+                  Object::set_value($library, 'agencyId', $this_vsn);
+                  Object::set_value($library, 'agencyType', self::set_agency_type($this_vsn, $vsn[$this_vsn]['BIB_TYPE']));
+                  Object::set_value($library, 'agencyName', $vsn[$this_vsn]['NAVN']);
+                  Object::set_value($library, 'agencyPhone', $vsn[$this_vsn]['TLF_NR'], FALSE);
+                  Object::set_value($library, 'agencyEmail', $vsn[$this_vsn]['EMAIL'], FALSE);
+                  Object::set_value($library, 'postalAddress', $vsn[$this_vsn]['BADR'], FALSE);
+                  Object::set_value($library, 'postalCode', $vsn[$this_vsn]['BPOSTNR'], FALSE);
+                  Object::set_value($library, 'city', $vsn[$this_vsn]['BCITY'], FALSE);
+                  Object::set_value($library, 'agencyWebsiteUrl', $vsn[$this_vsn]['URL'], FALSE);
+                  Object::set_value($library, 'agencyCvrNumber', $vsn[$this_vsn]['CVR_NR'], FALSE);
+                  Object::set_value($library, 'agencyPNumber', $vsn[$this_vsn]['P_NR'], FALSE);
+                  Object::set_value($library, 'agencyEanNumber', $vsn[$this_vsn]['EAN_NUMMER'], FALSE);
+                }
+                if ($pickupAgency && $pickupAgency->branchId->_value <> $row['BIB_NR']) {
+                  Object::set_array_value($library, 'pickupAgency', $pickupAgency);
+                  unset($pickupAgency);
+                }
+                $row['SB_KOPIBESTIL'] = $vsn[$this_vsn]['SB_KOPIBESTIL'];
+                self::fill_pickupAgency($pickupAgency, $row, $ip_list[$row['BIB_NR']]);
               }
-              $this_vsn = $row['KMD_NR'];
-              if ($library && $library->agencyId->_value <> $this_vsn) {
-                Object::set_array_value($library, 'pickupAgency', $pickupAgency);
-                unset($pickupAgency);
-                Object::set_array_value($res, 'library', $library);
-                unset($library);
-              }
-              if (empty($library)) {
-                Object::set_value($library, 'agencyId', $this_vsn);
-                Object::set_value($library, 'agencyType', self::set_agency_type($this_vsn, $vsn[$this_vsn]['BIB_TYPE']));
-                Object::set_value($library, 'agencyName', $vsn[$this_vsn]['NAVN']);
-                Object::set_value($library, 'agencyPhone', $vsn[$this_vsn]['TLF_NR'], FALSE);
-                Object::set_value($library, 'agencyEmail', $vsn[$this_vsn]['EMAIL'], FALSE);
-                Object::set_value($library, 'postalAddress', $vsn[$this_vsn]['BADR'], FALSE);
-                Object::set_value($library, 'postalCode', $vsn[$this_vsn]['BPOSTNR'], FALSE);
-                Object::set_value($library, 'city', $vsn[$this_vsn]['BCITY'], FALSE);
-                Object::set_value($library, 'agencyWebsiteUrl', $vsn[$this_vsn]['URL'], FALSE);
-                Object::set_value($library, 'agencyCvrNumber', $vsn[$this_vsn]['CVR_NR'], FALSE);
-                Object::set_value($library, 'agencyPNumber', $vsn[$this_vsn]['P_NR'], FALSE);
-                Object::set_value($library, 'agencyEanNumber', $vsn[$this_vsn]['EAN_NUMMER'], FALSE);
-              }
-              if ($pickupAgency && $pickupAgency->branchId->_value <> $row['BIB_NR']) {
-                Object::set_array_value($library, 'pickupAgency', $pickupAgency);
-                unset($pickupAgency);
-              }
-              $row['SB_KOPIBESTIL'] = $vsn[$this_vsn]['SB_KOPIBESTIL'];
-              self::fill_pickupAgency($pickupAgency, $row, $ip_list[$row['BIB_NR']]);
             }
             $this->watch->stop('fetch3');
             if ($pickupAgency) {
@@ -2648,8 +2662,10 @@ class openAgency extends webServiceServer {
         $this->watch->start('fetch');
         $ip_list = array();
         $rows = $oci->fetch_all_into_assoc();
-        foreach ($rows as $row) {
-          $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
+        if (is_array($rows)) {
+          foreach ($rows as $row) {
+            $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
+          }
         }
         $this->watch->stop('fetch');
         ksort($ip_list);
@@ -2753,9 +2769,11 @@ class openAgency extends webServiceServer {
               $profil_res = $oci->fetch_all_into_assoc();
               $this->watch->stop('sql2');
               $profiler = array();
-              foreach ($profil_res as $p) {
-                if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
-                  $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+              if (is_array($profil_res)) {
+                foreach ($profil_res as $p) {
+                  if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
+                    $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+                  }
                 }
               }
               foreach ($profiler as $profil_no => $profil) {
@@ -2820,13 +2838,16 @@ class openAgency extends webServiceServer {
                                 AND broendprofiler.bib_nr = :bind_agency' . $sql_add);
               $this->watch->stop('sql4');
               $this->watch->start('fetch4');
-              while ($s_row = $oci->fetch_into_assoc()) {
-                Object::set_value($s, 'sourceName', $s_row['NAME']);
-                Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
-                Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
-                Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
-                Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
-                unset($s);
+              $all_s_row = $oci->fetch_all_into_assoc();
+              if (is_array($all_s_row)) {
+                foreach ($all_s_row as $s_row) {
+                  Object::set_value($s, 'sourceName', $s_row['NAME']);
+                  Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
+                  Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
+                  Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
+                  Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
+                  unset($s);
+                }
               }
               $this->watch->stop('fetch4');
             } catch (fetException $e) {
@@ -2915,33 +2936,32 @@ class openAgency extends webServiceServer {
           $buf = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           Object::set_value($res, 'agencyId', $param->agencyId->_value);
-          foreach ($buf as $val) {
-            if ($help = $val['LICENS_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              if ($val['AUTOLINK']) {
-                Object::set_value($s, 'url', $val['AUTOLINK']);
+          if (is_array($buf)) {
+            foreach ($buf as $val) {
+              if ($help = $val['LICENS_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                if ($val['AUTOLINK']) {
+                  Object::set_value($s, 'url', $val['AUTOLINK']);
+                } else {
+                  Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
+                }
+              } elseif ($help = $val['DBC_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
+              } elseif ($help = $val['ANDRE_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
               }
-              else {
-                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
+              if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
+                if ($val['URL'])
+                  Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
+                else
+                  Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
+                Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
+                Object::set_array_value($res, 'subscription', $s);
               }
+              unset($s);
             }
-            elseif ($help = $val['DBC_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
-            }
-            elseif ($help = $val['ANDRE_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
-            }
-            if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
-              if ($val['URL'])
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
-              else
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
-              Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
-              Object::set_array_value($res, 'subscription', $s);
-            }
-            unset($s);
           }
         }
         catch (fetException $e) {

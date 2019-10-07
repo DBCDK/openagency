@@ -438,13 +438,15 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql1');
             $this->watch->start('fetch');
             $vb_rows = $oci->fetch_all_into_assoc();
-            foreach ($vb_rows as $vb_row) {
-              Object::set_value($res, 'willReceive',
-                ($vb_row['BEST_MODT'] == 'J' && ($vb_row['WR'] == 'J' || $vb_row['WR'] == 'B') ? 1 : 0));
-              if ($vb_row['WR'] == 'B') {
-                $col = $assoc[$mat_type][1] . $fjernl;
-                self::array_append_value_and_language($res->condition, $vb_row[$col], 'dan');
-                self::array_append_value_and_language($res->condition, $vb_row[$col.'_E'], 'eng');
+            if (is_array($vb_rows)) {
+              foreach ($vb_rows as $vb_row) {
+                Object::set_value($res, 'willReceive',
+                    ($vb_row['BEST_MODT'] == 'J' && ($vb_row['WR'] == 'J' || $vb_row['WR'] == 'B') ? 1 : 0));
+                if ($vb_row['WR'] == 'B') {
+                  $col = $assoc[$mat_type][1] . $fjernl;
+                  self::array_append_value_and_language($res->condition, $vb_row[$col], 'dan');
+                  self::array_append_value_and_language($res->condition, $vb_row[$col . '_E'], 'eng');
+                }
               }
             }
             $this->watch->stop('fetch');

@@ -286,11 +286,13 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $vk_rows = $oci->fetch_all_into_assoc();
-          foreach ($vk_rows as $vk_row) {
-            Object::set_value($b, 'agencyName', $vk_row['NAVN']);
-            Object::set_value($b, 'isil', 'DK-' . $vk_row['BIB_NR']);
-            Object::set_array_value($res, 'borrowerCheckLibrary', $b);
-            unset($b);
+          if (is_array($vk_rows)) {
+            foreach ($vk_rows as $vk_row) {
+              Object::set_value($b, 'agencyName', $vk_row['NAVN']);
+              Object::set_value($b, 'isil', 'DK-' . $vk_row['BIB_NR']);
+              Object::set_array_value($res, 'borrowerCheckLibrary', $b);
+              unset($b);
+            }
           }
           $this->watch->stop('fetch');
         }
@@ -862,9 +864,11 @@ class openAgency extends webServiceServer {
           $profil_res = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql2');
           $profiles = array();
-          foreach ($profil_res as $pr) {
-            if ($pr['PROFIL_ID'] && $pr['BROENDKILDE_ID']) {
-              $profiles[$pr['BIB_NR']][$pr['PROFIL_ID']][$pr['NAME']][] = $pr['BROENDKILDE_ID'];
+          if (is_array($profil_res)) {
+            foreach ($profil_res as $pr) {
+              if ($pr['PROFIL_ID'] && $pr['BROENDKILDE_ID']) {
+                $profiles[$pr['BIB_NR']][$pr['PROFIL_ID']][$pr['NAME']][] = $pr['BROENDKILDE_ID'];
+              }
             }
           }
           foreach ($profiles as $agency => $agency_profiles) {
@@ -2382,9 +2386,11 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql1');
             $this->watch->start('fetch1');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              $bib_nr = &$row['BIB_NR'];
-              $vsn[$bib_nr] = $row;
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                $bib_nr = &$row['BIB_NR'];
+                $vsn[$bib_nr] = $row;
+              }
             }
             $this->watch->stop('fetch1');
 
@@ -2488,38 +2494,40 @@ class openAgency extends webServiceServer {
             $this->watch->stop('sql3');
             $this->watch->start('fetch3');
             $rows = $oci->fetch_all_into_assoc();
-            foreach ($rows as $row) {
-              if ($ora_par['agencyId']) {
-                $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
-                if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
+            if (is_array($rows)) {
+              foreach ($rows as $row) {
+                if ($ora_par['agencyId']) {
+                  $a_key = array_search($row['BIB_NR'], $ora_par['agencyId']);
+                  if (is_int($a_key)) unset($ora_par['agencyId'][$a_key]);
+                }
+                $this_vsn = $row['KMD_NR'];
+                if ($library && $library->agencyId->_value <> $this_vsn) {
+                  Object::set_array_value($library, 'pickupAgency', $pickupAgency);
+                  unset($pickupAgency);
+                  Object::set_array_value($res, 'library', $library);
+                  unset($library);
+                }
+                if (empty($library)) {
+                  Object::set_value($library, 'agencyId', $this_vsn);
+                  Object::set_value($library, 'agencyType', self::set_agency_type($this_vsn, $vsn[$this_vsn]['BIB_TYPE']));
+                  Object::set_value($library, 'agencyName', $vsn[$this_vsn]['NAVN']);
+                  Object::set_value($library, 'agencyPhone', $vsn[$this_vsn]['TLF_NR'], FALSE);
+                  Object::set_value($library, 'agencyEmail', $vsn[$this_vsn]['EMAIL'], FALSE);
+                  Object::set_value($library, 'postalAddress', $vsn[$this_vsn]['BADR'], FALSE);
+                  Object::set_value($library, 'postalCode', $vsn[$this_vsn]['BPOSTNR'], FALSE);
+                  Object::set_value($library, 'city', $vsn[$this_vsn]['BCITY'], FALSE);
+                  Object::set_value($library, 'agencyWebsiteUrl', $vsn[$this_vsn]['URL'], FALSE);
+                  Object::set_value($library, 'agencyCvrNumber', $vsn[$this_vsn]['CVR_NR'], FALSE);
+                  Object::set_value($library, 'agencyPNumber', $vsn[$this_vsn]['P_NR'], FALSE);
+                  Object::set_value($library, 'agencyEanNumber', $vsn[$this_vsn]['EAN_NUMMER'], FALSE);
+                }
+                if ($pickupAgency && $pickupAgency->branchId->_value <> $row['BIB_NR']) {
+                  Object::set_array_value($library, 'pickupAgency', $pickupAgency);
+                  unset($pickupAgency);
+                }
+                $row['SB_KOPIBESTIL'] = $vsn[$this_vsn]['SB_KOPIBESTIL'];
+                self::fill_pickupAgency($pickupAgency, $row, $ip_list[$row['BIB_NR']]);
               }
-              $this_vsn = $row['KMD_NR'];
-              if ($library && $library->agencyId->_value <> $this_vsn) {
-                Object::set_array_value($library, 'pickupAgency', $pickupAgency);
-                unset($pickupAgency);
-                Object::set_array_value($res, 'library', $library);
-                unset($library);
-              }
-              if (empty($library)) {
-                Object::set_value($library, 'agencyId', $this_vsn);
-                Object::set_value($library, 'agencyType', self::set_agency_type($this_vsn, $vsn[$this_vsn]['BIB_TYPE']));
-                Object::set_value($library, 'agencyName', $vsn[$this_vsn]['NAVN']);
-                Object::set_value($library, 'agencyPhone', $vsn[$this_vsn]['TLF_NR'], FALSE);
-                Object::set_value($library, 'agencyEmail', $vsn[$this_vsn]['EMAIL'], FALSE);
-                Object::set_value($library, 'postalAddress', $vsn[$this_vsn]['BADR'], FALSE);
-                Object::set_value($library, 'postalCode', $vsn[$this_vsn]['BPOSTNR'], FALSE);
-                Object::set_value($library, 'city', $vsn[$this_vsn]['BCITY'], FALSE);
-                Object::set_value($library, 'agencyWebsiteUrl', $vsn[$this_vsn]['URL'], FALSE);
-                Object::set_value($library, 'agencyCvrNumber', $vsn[$this_vsn]['CVR_NR'], FALSE);
-                Object::set_value($library, 'agencyPNumber', $vsn[$this_vsn]['P_NR'], FALSE);
-                Object::set_value($library, 'agencyEanNumber', $vsn[$this_vsn]['EAN_NUMMER'], FALSE);
-              }
-              if ($pickupAgency && $pickupAgency->branchId->_value <> $row['BIB_NR']) {
-                Object::set_array_value($library, 'pickupAgency', $pickupAgency);
-                unset($pickupAgency);
-              }
-              $row['SB_KOPIBESTIL'] = $vsn[$this_vsn]['SB_KOPIBESTIL'];
-              self::fill_pickupAgency($pickupAgency, $row, $ip_list[$row['BIB_NR']]);
             }
             $this->watch->stop('fetch3');
             if ($pickupAgency) {
@@ -2652,8 +2660,10 @@ class openAgency extends webServiceServer {
         $this->watch->start('fetch');
         $ip_list = array();
         $rows = $oci->fetch_all_into_assoc();
-        foreach ($rows as $row) {
-          $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
+        if (is_array($rows)) {
+          foreach ($rows as $row) {
+            $ip_list[$row['BIB_NR']][] = $row['DOMAIN'];
+          }
         }
         $this->watch->stop('fetch');
         ksort($ip_list);

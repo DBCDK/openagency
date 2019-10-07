@@ -1819,9 +1819,9 @@ class openAgency extends webServiceServer {
                 $j = 'J';
                 $oci->bind('bind_j', $j);
                 if (self::xs_boolean($param->pickupAllowed->_value)) {
-                    $sqls[] .= 'vb.best_modt = :bind_j';
+                    $sqls[] .= 'vip_beh.best_modt = :bind_j';
                 } else {
-                    $sqls[] .= 'vb.best_modt != :bind_j';
+                    $sqls[] .= 'vip_beh.best_modt != :bind_j';
                 }
             }
             $filter_sql = implode(' AND ', $sqls);

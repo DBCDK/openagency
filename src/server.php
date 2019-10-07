@@ -764,26 +764,27 @@ class openAgency extends webServiceServer {
           $last_bib = '';
           $this->watch->start('fetch');
           $rows = $oci->fetch_all_into_assoc();
-          foreach ($rows as $sl_row) {
-            if ($last_lib != $sl_row['BIB_NR']) {
-              if ($last_lib) {
-                Object::set_array_value($res, 'saouLicenseInfo', $sl);
-                unset($sl);
+          if (is_array($rows)) {
+            foreach ($rows as $sl_row) {
+              if ($last_lib != $sl_row['BIB_NR']) {
+                if ($last_lib) {
+                  Object::set_array_value($res, 'saouLicenseInfo', $sl);
+                  unset($sl);
+                }
+                $last_lib = $sl_row['BIB_NR'];
+                Object::set_value($sl, 'agencyId', $sl_row['BIB_NR']);
+                if ($sl_row['PROXYURL']) {
+                  Object::set_value($sl, 'proxyUrl', $sl_row['PROXYURL']);
+                }
               }
-              $last_lib = $sl_row['BIB_NR'];
-              Object::set_value($sl, 'agencyId', $sl_row['BIB_NR']);
-              if ($sl_row['PROXYURL']) {
-                Object::set_value($sl, 'proxyUrl', $sl_row['PROXYURL']);
-              }
+              Object::set_array_value($sl, 'ipAddress', $sl_row['DOMAIN']);
             }
-            Object::set_array_value($sl, 'ipAddress', $sl_row['DOMAIN']);
           }
           $this->watch->stop('fetch');
           if ($sl) {
             Object::set_array_value($res, 'saouLicenseInfo', $sl);
           }
-        }
-        catch (fetException $e) {
+        } catch (fetException $e) {
           $this->watch->stop('sql1');
           VerboseJson::log(FATAL, 'OpenAgency('.__LINE__.'):: DB select error: ' . $e->getMessage());
           Object::set_value($res, 'error', 'service_unavailable');

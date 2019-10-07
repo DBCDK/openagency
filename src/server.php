@@ -2837,13 +2837,15 @@ class openAgency extends webServiceServer {
               $this->watch->stop('sql4');
               $this->watch->start('fetch4');
               $all_s_row = $oci->fetch_all_into_assoc();
-              foreach ($all_s_row as $s_row) {
-                Object::set_value($s, 'sourceName', $s_row['NAME']);
-                Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
-                Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
-                Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
-                Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
-                unset($s);
+              if (is_array($all_s_row)) {
+                foreach ($all_s_row as $s_row) {
+                  Object::set_value($s, 'sourceName', $s_row['NAME']);
+                  Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
+                  Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);
+                  Object::set_value($res->profile[$s_row['BP_NAME']]->_value, 'profileName', $s_row['BP_NAME']);
+                  Object::set_array_value($res->profile[$s_row['BP_NAME']]->_value, 'source', $s);
+                  unset($s);
+                }
               }
               $this->watch->stop('fetch4');
             } catch (fetException $e) {
@@ -2932,33 +2934,32 @@ class openAgency extends webServiceServer {
           $buf = $oci->fetch_all_into_assoc();
           $this->watch->stop('sql1');
           Object::set_value($res, 'agencyId', $param->agencyId->_value);
-          foreach ($buf as $val) {
-            if ($help = $val['LICENS_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              if ($val['AUTOLINK']) {
-                Object::set_value($s, 'url', $val['AUTOLINK']);
+          if (is_array($buf)) {
+            foreach ($buf as $val) {
+              if ($help = $val['LICENS_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                if ($val['AUTOLINK']) {
+                  Object::set_value($s, 'url', $val['AUTOLINK']);
+                } else {
+                  Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
+                }
+              } elseif ($help = $val['DBC_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
+              } elseif ($help = $val['ANDRE_NAVN']) {
+                Object::set_value($s, 'name', $help);
+                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
               }
-              else {
-                Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['LICENS_URL']));
+              if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
+                if ($val['URL'])
+                  Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
+                else
+                  Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
+                Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
+                Object::set_array_value($res, 'subscription', $s);
               }
+              unset($s);
             }
-            elseif ($help = $val['DBC_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['DBC_URL']));
-            }
-            elseif ($help = $val['ANDRE_NAVN']) {
-              Object::set_value($s, 'name', $help);
-              Object::set_value($s, 'url', ($val['URL'] ? $val['URL'] : $val['ANDRE_URL']));
-            }
-            if ($s->url->_value && ($val['FAUST'] <> 1234567)) {    // drop eBib
-              if ($val['URL'])
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['URL'], $s->url->_value));
-              else
-                Object::set_value($s, 'url', str_replace('[URL_FJERNADGANG]', $val['LICENS_URL'], $s->url->_value));
-              Object::set_value($s, 'url', str_replace('[LICENS_ID]', $val['FAUST'], $s->url->_value));
-              Object::set_array_value($res, 'subscription', $s);
-            }
-            unset($s);
           }
         }
         catch (fetException $e) {

@@ -346,15 +346,17 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $vk_rows = $oci->fetch_all_into_assoc();
-          foreach ($vk_rows as $vk_row) {
-            Object::set_value($o, 'encrypt', 'YES');
-            Object::set_value($o, 'email', $param->email->_value);
-            Object::set_value($o, 'agencyId', $vk_row['BIBLIOTEK']);
-            Object::set_value($o, 'key', $vk_row['KEY']);
-            Object::set_value($o, 'base64', ($vk_row['NOTBASE64'] == 'ja' ? 'NO' : 'YES'));
-            Object::set_value($o, 'date', $vk_row['UDL_DATO']);
-            Object::set_array_value($res, 'encryption', $o);
-            unset($o);
+          if (is_array($vk_rows)) {
+            foreach ($vk_rows as $vk_row) {
+              Object::set_value($o, 'encrypt', 'YES');
+              Object::set_value($o, 'email', $param->email->_value);
+              Object::set_value($o, 'agencyId', $vk_row['BIBLIOTEK']);
+              Object::set_value($o, 'key', $vk_row['KEY']);
+              Object::set_value($o, 'base64', ($vk_row['NOTBASE64'] == 'ja' ? 'NO' : 'YES'));
+              Object::set_value($o, 'date', $vk_row['UDL_DATO']);
+              Object::set_array_value($res, 'encryption', $o);
+              unset($o);
+            }
           }
           $this->watch->stop('fetch');
           if (empty($res)) {
@@ -671,31 +673,32 @@ class openAgency extends webServiceServer {
           $this->watch->stop('sql1');
           $this->watch->start('fetch');
           $rows = $oci->fetch_all_into_assoc();
-          foreach ($rows as $row) {
-            if (empty($curr_bib)) {
-              $curr_bib = $row['BIB_NR'];
-            }
-            if ($curr_bib <> $row['BIB_NR']) {
-              Object::set_array_value($res, 'registryInfo', $registryInfo);
-              unset($registryInfo);
-              $curr_bib = $row['BIB_NR'];
-            }
-            if ($row) {
-              self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
-              $dbc_target = $this->config->get_value('dbc_target', 'setup');
-              if ($row['HOLDINGSFORMAT'] == 'B') {
-                self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
-                self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
+          if (is_array($rows)) {
+            foreach ($rows as $row) {
+              if (empty($curr_bib)) {
+                $curr_bib = $row['BIB_NR'];
               }
-              if ($row['MAILBESTIL_VIA'] == 'C') {
-                self::set_z3950Ill($registryInfo, $row);
+              if ($curr_bib <> $row['BIB_NR']) {
+                Object::set_array_value($res, 'registryInfo', $registryInfo);
+                unset($registryInfo);
+                $curr_bib = $row['BIB_NR'];
               }
-              elseif ($row['MAILBESTIL_VIA'] == 'E') {
-                self::set_iso18626($registryInfo, $row);
-                if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
+              if ($row) {
+                self::fill_pickupAgency($registryInfo->pickupAgency->_value, $row);
+                $dbc_target = $this->config->get_value('dbc_target', 'setup');
+                if ($row['HOLDINGSFORMAT'] == 'B') {
                   self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                  self::use_dbc_as_iso18626_target($row, $dbc_target['iso18626']);
                 }
-                self::set_z3950Ill($registryInfo, $row, FALSE);
+                if ($row['MAILBESTIL_VIA'] == 'C') {
+                  self::set_z3950Ill($registryInfo, $row);
+                } elseif ($row['MAILBESTIL_VIA'] == 'E') {
+                  self::set_iso18626($registryInfo, $row);
+                  if (empty($row['URL_ITEMORDER_BESTIL']) || !in_array($row['HOLDINGSFORMAT'], array('A', '', NULL))) {
+                    self::use_dbc_as_z3950_target($row, $dbc_target['z3950'], $param->authentication->_value);
+                  }
+                  self::set_z3950Ill($registryInfo, $row, FALSE);
+                }
               }
             }
           }
@@ -2753,9 +2756,11 @@ class openAgency extends webServiceServer {
               $profil_res = $oci->fetch_all_into_assoc();
               $this->watch->stop('sql2');
               $profiler = array();
-              foreach ($profil_res as $p) {
-                if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
-                  $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+              if (is_array($profil_res)) {
+                foreach ($profil_res as $p) {
+                  if ($p['PROFIL_ID'] && $p['BROENDKILDE_ID']) {
+                    $profiler[$p['PROFIL_ID']][$p['BROENDKILDE_ID']] = $p;
+                  }
                 }
               }
               foreach ($profiler as $profil_no => $profil) {
@@ -2820,7 +2825,8 @@ class openAgency extends webServiceServer {
                                 AND broendprofiler.bib_nr = :bind_agency' . $sql_add);
               $this->watch->stop('sql4');
               $this->watch->start('fetch4');
-              while ($s_row = $oci->fetch_into_assoc()) {
+              $all_s_row = $oci->fetch_all_into_assoc();
+              foreach ($all_s_row as $s_row) {
                 Object::set_value($s, 'sourceName', $s_row['NAME']);
                 Object::set_value($s, 'sourceOwner', (mb_strtolower($s_row['SUBMITTER']) == 'agency' ? $agency : $s_row['SUBMITTER']));
                 Object::set_value($s, 'sourceFormat', $s_row['FORMAT']);

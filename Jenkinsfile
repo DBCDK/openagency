@@ -184,7 +184,7 @@ pipeline {
             script {
                 if ("${env.BRANCH_NAME}" == 'master') {
                     emailext(
-                            to: "thl@dbc.dk,apo@dbc.dk,mvs@dbc.dk,mbd@dbc.dk",
+                            to: "iscrum@dbc.dk",
                             subject: "[Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} back to normal",
                             mimeType: 'text/html; charset=UTF-8',
                             body: "<p>The master build is back to normal.</p><p><a href=\"${env.BUILD_URL}\">Build information</a>.</p>",
@@ -213,7 +213,7 @@ pipeline {
                 if ("${env.BRANCH_NAME}" == 'master') {
                     emailext(
                             recipientProviders: [developers(), culprits()],
-                            to: "thl@dbc.dk,apo@dbc.dk,mvs@dbc.dk,mbd@dbc.dk",
+                            to: "iscrum@dbc.dk",
                             subject: "[Jenkins] ${env.JOB_NAME} #${env.BUILD_NUMBER} failed",
                             mimeType: 'text/html; charset=UTF-8',
                             body: "<p>The master build failed. Log attached. </p><p><a href=\"${env.BUILD_URL}\">Build information</a>.</p>",

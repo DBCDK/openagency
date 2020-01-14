@@ -1,6 +1,10 @@
+#!groovy
+
+def workerNode = "devel9"
+
 pipeline {
     agent {
-        label "devel9"
+        label workerNode
     }
     environment {
         VERSION = "1.0.0"
@@ -21,6 +25,9 @@ pipeline {
         // The registry to push images to
         registry = "https://docker-i.dbc.dk"
         registryCredential = "docker"
+
+        // Used to update vip-openagency yml file in dit-gitops-secrets project
+        GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
     }
     triggers {
         pollSCM("H/3 * * * *")
@@ -160,12 +167,34 @@ pipeline {
                         echo "=>  $pushTag"
                     }
 
-
                     currentBuild.displayName = "Pushed *-${VERSION}:${DOCKER_PUSH_TAG}"
                 }
             }
         }
 
+        // This stage updates the services/vip-openagency.yml file in the project metascrum/dit-gitops-secrets with the
+        // new buildnumber to ensure DIT always runs on the correct version
+        stage("Update DIT") {
+            agent {
+                docker {
+                    label workerNode
+                    image "docker.dbc.dk/build-env:latest"
+                    alwaysPull true
+                }
+            }
+            when {
+                expression {
+                    (currentBuild.result == null || currentBuild.result == 'SUCCESS') && env.BRANCH_NAME == 'master'
+                }
+            }
+            steps {
+                script {
+                    dir("deploy") {
+                        sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_BUILD_TAG} -b master"
+                    }
+                }
+            }
+        }
     }
 
     post {

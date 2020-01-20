@@ -190,7 +190,7 @@ pipeline {
             steps {
                 script {
                     dir("deploy") {
-                        sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} https://gitlab.dbc.dk/metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
+                        sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
                     }
                 }
             }

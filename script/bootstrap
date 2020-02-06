@@ -38,9 +38,12 @@ EXTNAME="OLS_class_lib"
 # OA_234_REV="117239" # = Oracle OpenAgency 2.34 version
 # Originally this was 124719. But, we now pull slightly newer files of the first subset.
 OA_234_DIFF_REV="124827" # = PostgreSQL OpenAgency 2.34 version
-OA_234_DIFF_LIST="pg_database_class.php pg_wrapper_class.php verbose_json_class.php"
+OA_234_DIFF_LIST="pg_database_class.php pg_wrapper_class.php"
 OA_234_DIFF_NS_REV="118899"
 OA_234_DIFF_NS_LIST="objconvert_class.php"
+OA_234_DIFF_JSON_REV="125858"
+OA_234_DIFF_JSON_LIST="verbose_json_class.php"
+
 
 set -e
 
@@ -56,6 +59,7 @@ if [ -d ${EXTNAME} ] ; then
     info "Svn repo  updated"
     updateCherryPicks "$OA_234_DIFF_LIST" "$OA_234_DIFF_REV"
     updateCherryPicks "$OA_234_DIFF_NS_LIST" "$OA_234_DIFF_NS_REV"
+    updateCherryPicks "$OA_234_DIFF_JSON_LIST" "$OA_234_DIFF_JSON_REV"
     info "Svn repo in '${SRCDIR}/${EXTNAME}' updated"
 else
     info "Checking out svn repo '${REPO234}' into directory '${SRCDIR}/${EXTNAME}'"
@@ -64,6 +68,7 @@ else
     cd ${EXTNAME} || die "Unable to change into directory '${SRCDIR}/${EXTNAME}'"
     updateCherryPicks "$OA_234_DIFF_LIST" "$OA_234_DIFF_REV"
     updateCherryPicks "$OA_234_DIFF_NS_LIST" "$OA_234_DIFF_NS_REV"
+    updateCherryPicks "$OA_234_DIFF_JSON_LIST" "$OA_234_DIFF_JSON_REV"
 fi
 info "Svn info:"
 svn info | grep -e URL -e Revision -e Last

@@ -12,6 +12,7 @@ Scripts marked with [extra] are some additional scripts, compared to [scripts to
 * `setup`: Currently calls bootstrap.
 * `update` : Currently calls setup.
 * `server` : Starts the ws container in the docker directory.
+* `client` : Starts a client (browser) for the server started using `server`. [extra]
 * `build`: Builds the docker images for the project. [extra]
 * `test`: Runs the systemtest for the project, using docker compose, etc.
 

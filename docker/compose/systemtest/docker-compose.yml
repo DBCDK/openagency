@@ -28,6 +28,9 @@ services:
     environment:
       - DB_URL=vip_user:vip_password@vip-postgres:5432/vip_db
       - JAVA_MAX_HEAP_SIZE=2G
+      - CACHE_VIPCORE=1
+      - CACHE_FORS=1
+      - FORSRIGHT_ENDPOINT=https://forsrights.addi.dk/1.2/
 
   # The image under test
   openagency-php:

@@ -1,7 +1,5 @@
 FROM docker.dbc.dk/dbc-apache-php7
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -q -y install php-mbstring ca-certificates php7.0-pgsql
-
 LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \
       APACHE_SERVER_NAME="The VirtualHost ServerName set for Apache. The global is set to localhost always. [localhost]" \
       MY_DOMAIN="The domain the service is operating from. [dbc.dk]" \
@@ -18,27 +16,13 @@ LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \
       HTTP_PROXY_INSECURE_MODE_FOR_TEST_ONLY="Use insecure mode (ignore certificates) for https communication when HTTP_PROXY enabled in ncip mode. Use ONLY in tests. Set to 1 to enable [<empty string>]" \
       CACHE_EXPIRE_LIBRARYRULES="Cache expire time in seconds for libraryRules. [600]"
 
-# Configure memcached
-COPY docker/images/ws/memcached.conf /etc/
-
-# Configure apache settings.
-COPY docker/images/ws/apache_security.conf /etc/apache2/conf-enabled/
-COPY docker/images/ws/000-default.conf /etc/apache2/sites-enabled/000-default.conf
-
-# Increase PHP memory to 4GB
-RUN sed 's/\(memory_limit.*\)/; \1\nmemory_limit = 4096M/g' --in-place /etc/php/7.0/apache2/php.ini
-
-# Setup entrypoint
-COPY docker/images/ws/entrypoint.sh /
-RUN chmod 755 /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh", "/etc/apache2/sites-enabled/000-default.conf"]
-
 # Setup the www directory.
 RUN rm -r /var/www
-COPY src/OLS_class_lib/ /var/www/html/OLS_class_lib/
-RUN rm -Rf /var/www/html/OLS_class_lib/.svn /var/www/html/OLS_class_lib/test /var/www/html/OLS_class_lib/simpletest
-COPY src/xml/ /var/www/html/xml/
-COPY src/openagency.ini_INSTALL src/openagency.wsdl_INSTALL src/openagency.xsd src/server.php src/robots.txt_INSTALL /var/www/html/
-RUN ln -s server.php /var/www/html/index.php && chown -R www-data:www-data /var/www/html
+COPY --chown=sideejer:sideejer src/xml ${DBC_PHP_INSTALL_DIR}/xml
+COPY --chown=sideejer:sideejer src/OLS_class_lib ${DBC_PHP_INSTALL_DIR}/OLS_class_lib
+COPY --chown=sideejer:sideejer src/*.php src/*_INSTALL src/*.xsd ${DBC_PHP_INSTALL_DIR}/
 
+RUN rm -Rf ${DBC_PHP_INSTALL_DIR}/OLS_class_lib/.svn ${DBC_PHP_INSTALL_DIR}/OLS_class_lib/test ${DBC_PHP_INSTALL_DIR}/simpletest && \
+    ln -s server.php ${DBC_PHP_INSTALL_DIR}/index.php
 
+ENV VERBOSE_LEVEL=-WARNING+ERROR+FATAL+STAT+TIMER+TRACE

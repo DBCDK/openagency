@@ -177,7 +177,7 @@ function waitForOk() {
   # and that the datamodel is sort of OK
   # Abuse this to check that the service is running.
   # waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
-  waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
+  waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
   # If we are connected to the database, it would appear we get a 200 with
   # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
@@ -195,13 +195,13 @@ function waitForOk() {
 
   # This uses "service"
   info "Checking openagency.service call"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found
   # But, we also want this, to check the log when debugging.
   info "Checking openagency.service call basic"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
   # This is related to VP-262
   info "Checking openagency.openSearchProfile call with missing agencyId"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
 }
 
 # Print info about how to stop containers.

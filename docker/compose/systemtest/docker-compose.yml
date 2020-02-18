@@ -46,6 +46,7 @@ services:
       #- HTTP_PROXY_INSECURE_MODE_FOR_TEST_ONLY=1
       - COPA_RS_URL=https://iso18626.addi.dk/copa-rs/app/iso18626/
       - COPA_RS_PASSWD=xxxxxxxxxxxx
+      - CACHE_EXPIRE_LIBRARYRULES=600
     expose:
       - 80
     ports:

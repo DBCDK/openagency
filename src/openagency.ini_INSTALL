@@ -116,7 +116,7 @@ profile_for_own_material[profil_2][limit_in_days] = 10
 
 ; --------------
 ; DBC target address for order-systems
-dbc_target[z3950][address] = @Z3950_URL@
+dbc_target[z3950][address] = ${Z3950_URL}
 dbc_target[iso18626][address] = ${COPA_RS_URL}
 dbc_target[iso18626][password] = ${COPA_RS_PASSWD}
 

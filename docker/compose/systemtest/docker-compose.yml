@@ -13,26 +13,14 @@ services:
   # And, an vip image to populate the database (and, that is all it does, folks).
   # Note, that we depend on the latest build on master always. You will need
   # to change this yourself, if you need to do otherwise, e.g. during testing.
-  vip-core:
-    image: docker-i.dbc.dk/vipcore:latest
-    expose:
-      - 8080
-    ports:
-      - 8080
-    environment:
-      - DB_URL=vip_user:vip_password@vip-postgres:5432/vip_db
-      - JAVA_MAX_HEAP_SIZE=2G
-      - CACHE_VIPCORE=1
-      - CACHE_FORS=1
-      - FORSRIGHT_ENDPOINT=https://forsrights.addi.dk/1.2/
 
   # The image under test
   openagency-php:
     image: openagency-php-local/openagency-php${DOCKER_IMAGE_TAG}
     environment:
-      - VIP_CREDENTIALS=psql://vip_user:vip_password@vip-postgres:5432/vip_db
+      - VIP_CREDENTIALS=psql://vip:vippass@vip-postgres:5432/vip_db
       # This is maintained if we need testing of the postgresql parsing thing.
-      # - VIP_CREDENTIALS=host=vip-postgres port=5432 dbname=vip_db user=vip_user password=vip_password connect_timeout=1
+      # - VIP_CREDENTIALS=host=vip-postgres port=5432 dbname=vip_db user=vip password=vippass connect_timeout=1
       - URL_PATH=staging_2.34
       - FORS_RIGHTS=https://forsrights.addi.dk/1.2/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
       - APACHE_SERVER_NAME=localhost
@@ -40,7 +28,8 @@ services:
       #- HTTP_PROXY_INSECURE_MODE_FOR_TEST_ONLY=1
       - COPA_RS_URL=https://iso18626.addi.dk/copa-rs/app/iso18626/
       - COPA_RS_PASSWD=xxxxxxxxxxxx
-      - CACHE_EXPIRE_LIBRARYRULES=600
+    depends_on:
+      - "vip-postgres"
     expose:
       - 80
     ports:

@@ -17,7 +17,7 @@ LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \
       CACHE_EXPIRE_LIBRARYRULES="Cache expire time in seconds for libraryRules. [600]"
 
 # Setup the www directory.
-RUN rm -r /var/www
+
 COPY --chown=sideejer:sideejer src/xml ${DBC_PHP_INSTALL_DIR}/xml
 COPY --chown=sideejer:sideejer src/OLS_class_lib ${DBC_PHP_INSTALL_DIR}/OLS_class_lib
 COPY --chown=sideejer:sideejer src/*.php src/*_INSTALL src/*.xsd ${DBC_PHP_INSTALL_DIR}/
@@ -25,4 +25,5 @@ COPY --chown=sideejer:sideejer src/*.php src/*_INSTALL src/*.xsd ${DBC_PHP_INSTA
 RUN rm -Rf ${DBC_PHP_INSTALL_DIR}/OLS_class_lib/.svn ${DBC_PHP_INSTALL_DIR}/OLS_class_lib/test ${DBC_PHP_INSTALL_DIR}/simpletest && \
     ln -s server.php ${DBC_PHP_INSTALL_DIR}/index.php
 
-ENV VERBOSE_LEVEL=-WARNING+ERROR+FATAL+STAT+TIMER+TRACE
+ENV VERBOSE_LEVEL=-WARNING+ERROR+FATAL+STAT+TIMER+TRACE \
+    CACHE_EXPIRE_LIBRARYRULES=600

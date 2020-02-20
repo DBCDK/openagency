@@ -4,13 +4,7 @@ version: '3'
 services:
   # We need a postgress server for VIP to initialize the database on.
   vip-postgres:
-    image: docker.dbc.dk/dbc-postgres:10
-    environment:
-      # Note, if you change the databasename, you must update the run-system-test script, that loads some data
-      # into the database. This could probably be avoided by using this image smarter.
-      - POSTGRES_DB=vip_db
-      - POSTGRES_USER=vip_user
-      - POSTGRES_PASSWORD=vip_password
+    image: docker-i.dbc.dk/vip-dit-test-data
     expose:
       - 5432
     ports:

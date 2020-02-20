@@ -20,13 +20,11 @@
 
 # Names of the docker compose services. These should match the ones in the systemtest/docker-compose.yml file
 WS_SERVICE="openagency-php"
-VIP_CORE_SERVICE="vip-core"
 VIP_POSTGRES_SERVICE="vip-postgres"
 
 # Names of the actual docker images. These should match the ones in the systemtest/docker-compose.yml file
 # SOAPUI_IMAGE="docker-i.dbc.dk/soapui-java:latest"
-VIP_CORE_IMAGE="docker-i.dbc.dk/vipcore:latest"
-VIP_POSTGRES_IMAGE="docker.dbc.dk/dbc-postgres:10"
+VIP_POSTGRES_IMAGE="docker-i.dbc.dk/vip-dit-test-data:latest"
 
 # Use this to append "rare" extra arguments to docker-compose. Note, for yml files, use COMPOSE_FILE
 DOCKER_COMPOSE="docker-compose"
@@ -82,7 +80,6 @@ function startBaseContainers() {
   # TODO: I can see that APO has removed the force-recreate from a similar file. Perhaps they are not useful?
   ${DOCKER_COMPOSE} up --force-recreate -d ${VIP_POSTGRES_SERVICE} || die "docker-compose up -d ${VIP_POSTGRES_SERVICE}"
   ${DOCKER_COMPOSE} up --force-recreate -d ${WS_SERVICE}           || die "docker-compose up -d ${WS_SERVICE}"
-  ${DOCKER_COMPOSE} up --force-recreate -d ${VIP_CORE_SERVICE}     || die "docker-compose up -d ${VIP_CORE_SERVICE}"
   }
 
 
@@ -158,14 +155,6 @@ function waitForOk() {
   info "Waiting on base containers"
   # It is assumed that the proxy container is up very quickly, and that the vip db container is up quicker than the vip container.
 
-  # Wait for VIP CORE to be ready
-  VIP_CORE_CONTAINERID=$(docker-compose ps -q ${VIP_CORE_SERVICE}) || die "Unable to obtain container id for compose service ${VIP_CORE_SERVICE}"
-  VIP_CORE_SERVICE_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "8080/tcp") 0).HostPort}}' ${VIP_CORE_CONTAINERID}) \
-    || die "Unable to get ws service port mapping for container ${VIP_CORE_CONTAINERID} for compose service ${VIP_CORE_SERVICE}"
-  info "VIP_CORE_SERVICE_PORT=${VIP_CORE_SERVICE_PORT}"
-  info "Waiting for vip-core container to be ready"
-  waitFor200 "http://${HOST_IP}:${VIP_CORE_SERVICE_PORT}/1.0/api/howru" 300 vip-core || die "vip-core service not ready in 300 seconds"
-
   # Wait for the service/gui under test to be ready
   WS_SERVICE_CONTAINERID=$(docker-compose ps -q ${WS_SERVICE}) || die "Unable to obtain container id for compose service ${WS_SERVICE}"
   WS_SERVICE_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}' ${WS_SERVICE_CONTAINERID}) \
@@ -195,7 +184,7 @@ function waitForOk() {
 
   # This uses "service"
   info "Checking openagency.service call"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php agency_not_found
+  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php "<oa:responder>710100</oa:responder>"
   # But, we also want this, to check the log when debugging.
   info "Checking openagency.service call basic"
   checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse

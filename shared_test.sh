@@ -97,7 +97,7 @@ function waitFor200() {
         else
             echo -n .
         fi
-        if [ "${OK_COUNT}" -gt 2 ] ; then
+        if [ "${OK_COUNT}" -gt 1 ] ; then
             echo
             info "Service ready in " $(( $(date '+%s') - START_TIME )) " seconds.";
             info "Last output : '$(cat ${OUTPUT})'"
@@ -140,13 +140,8 @@ function checkServiceMatch() {
     return 1
 }
 
-# get the ip of the named container
-function getIPofContainer( ) {
-  ${DOCKER_COMPOSE} exec $1 hostname -i  | tr -d '\r'
-}
-
 function getIPAndPortOfContainer() {
-  docker-compose port openagency-php 80 | tr -d '\n'
+  ${DOCKER_COMPOSE} port $1 80 | sed -e "s-0.0.0.0-${HOST_IP}-" | tr -d '\n'
 }
 
 # Wait for OK from the WS service.
@@ -177,15 +172,15 @@ function waitForOk() {
 
 
   info "Wait for gold service to start"
-  WS_SERVICE_GOLD_IP=$(getIPofContainer ${WS_SERVICE_GOLD})
+  WS_SERVICE_GOLD_IP_PORT=$(getIPAndPortOfContainer ${WS_SERVICE_GOLD})
 
-  info "WS_SERVICE_GOLD_IP=${WS_SERVICE_GOLD_IP}"
+  info "WS_SERVICE_GOLD_IP_PORT=${WS_SERVICE_GOLD_IP_PORT}"
   info "Waiting for ws container to be ready"
   # The normal HowRU requires a bunch of data in the database and returns 503, when not ready.
   # We just want - at this point - to make sure we are talking to the database
   # and that the datamodel is sort of OK
   # Abuse this to check that the service is running.
-  waitFor200 "http://${WS_SERVICE_GOLD_IP}:80/gold_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
+  waitFor200 "http://${WS_SERVICE_GOLD_IP_PORT}/gold_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
 
 }

@@ -30,9 +30,9 @@ function runTest() {
   [ -d "$JUNIT_RESULT_DIR" ] || mkdir "$JUNIT_RESULT_DIR"
   JUNIT_RESULT_DIR=$(realpath "$JUNIT_RESULT_DIR")
   info "Starting oa brute force tester"
-  TEST_IP=$(getIPofContainer "$WS_SERVICE")
-  GOLD_IP=$(getIPofContainer "$WS_SERVICE_GOLD")
-  docker run --rm -e BUILD_NUMBER=test --network=${COMPOSE_PROJECT_NAME}_default -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "http://$GOLD_IP:80/gold_oa/" "http://$TEST_IP:80/test_oa/" FindLibraryTest
+  TEST_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE")
+  GOLD_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE_GOLD")
+  docker run --rm -e BUILD_NUMBER=test --network=${COMPOSE_PROJECT_NAME}_default -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/" FindLibraryTest
   RESULT=$?
   info "Result of test is : " ${RESULT}
   TESTRUN_PASSED=${RESULT}

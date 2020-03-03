@@ -84,13 +84,13 @@ pipeline {
                     steps {
                         script {
                             echo "Running integration test on ${DOCKER_BUILD_TAG}"
-                            //ansiColor("xterm") {
+                            ansiColor("xterm") {
                                 sh """#!/usr/bin/env bash
                                 set -e
                                 pwd
                                 ./run-system-test.sh --debug --pull --tag ${DOCKER_BUILD_TAG}
                                 """
-                            //}
+                            }
                         }
                     }
                 }

@@ -15,11 +15,11 @@
 # VIP_POSTGRES  : Test / fake database
 # VIP_CORE      : Only used to initialise the database in the test image.
 # WS            : The actual service under test (production image)
-# SOAPUI        : The service used to run soapui, for testing the WS service (test image)
 
 
 # Names of the docker compose services. These should match the ones in the systemtest/docker-compose.yml file
 WS_SERVICE="openagency-php"
+WS_SERVICE_GOLD="openagency-gold"
 VIP_POSTGRES_SERVICE="vip-postgres"
 
 # Names of the actual docker images. These should match the ones in the systemtest/docker-compose.yml file
@@ -66,23 +66,16 @@ function check_on_path() {
 # Pulling is not performed, if we are running locally.
 function pullImages() {
   info "Updating non project images to newest from docker-i.dbc.dk. Errors are ignored."
-  # docker pull ${SOAPUI_IMAGE}
   docker pull ${VIP_POSTGRES_IMAGE}
   docker pull ${VIP_CORE_IMAGE}
+  docker pull ${VIP_CORE_IMAGE_GOLD}
 }
 
 # Start the basecontainers. These are the containers that are used in both tests.
 function startBaseContainers() {
   info "Starting base containers"
-  # Note, the postgress image needs to be up and running, before the vip image, which is why we start it first
-  # We could wait on it, but the vip core service is something like 15 seconds in starting up, so the
-  # db container is in practice ready a long time before that.
-  # TODO: I can see that APO has removed the force-recreate from a similar file. Perhaps they are not useful?
-  ${DOCKER_COMPOSE} up --force-recreate -d ${VIP_POSTGRES_SERVICE} || die "docker-compose up -d ${VIP_POSTGRES_SERVICE}"
-  ${DOCKER_COMPOSE} up --force-recreate -d ${WS_SERVICE}           || die "docker-compose up -d ${WS_SERVICE}"
-  }
-
-
+  ${DOCKER_COMPOSE} up --force-recreate -d  || die "docker-compose up -d "
+}
 
 # Arguments:
 # 1: URL
@@ -149,6 +142,10 @@ function checkServiceMatch() {
     return 1
 }
 
+# get the ip of the named container
+function getIPofContainer( ) {
+  ${DOCKER_COMPOSE} exec $1 hostname -i | tr -d '\r'
+}
 
 # Wait for OK from the WS service.
 function waitForOk() {
@@ -156,41 +153,39 @@ function waitForOk() {
   # It is assumed that the proxy container is up very quickly, and that the vip db container is up quicker than the vip container.
 
   # Wait for the service/gui under test to be ready
-  WS_SERVICE_CONTAINERID=$(docker-compose ps -q ${WS_SERVICE}) || die "Unable to obtain container id for compose service ${WS_SERVICE}"
-  WS_SERVICE_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "80/tcp") 0).HostPort}}' ${WS_SERVICE_CONTAINERID}) \
-    || die "Unable to get ws service port mapping for container ${WS_SERVICE_CONTAINERID} for compose service ${WS_SERVICE}"
-  info "WS_SERVICE_PORT=${WS_SERVICE_PORT}"
+  WS_SERVICE_IP=$(getIPofContainer ${WS_SERVICE})
+
+  info "WS_SERVICE_IP=${WS_SERVICE_IP}"
   info "Waiting for ws container to be ready"
   # The normal HowRU requires a bunch of data in the database and returns 503, when not ready.
   # We just want - at this point - to make sure we are talking to the database
   # and that the datamodel is sort of OK
   # Abuse this to check that the service is running.
-  # waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
-  waitFor200 "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
-
-  # If we are connected to the database, it would appear we get a 200 with
-  # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
-  # <SOAP-ENV:Body><oa:serviceResponse><oa:error>agency_not_found</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-
-  # If we are NOT connected to the database, we get
-  # <?xml version="1.0" encoding="UTF-8"?><SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:oa="http://oss.dbc.dk/ns/openagency">
-  # <SOAP-ENV:Body><oa:serviceResponse><oa:error>service_unavailable</oa:error></oa:serviceResponse></SOAP-ENV:Body></SOAP-ENV:Envelope>
-
-  # Make sure we are connnected to something.
-
-  # You can use these two lines to force connect errors in the database log, during development
-  # VIP_POSTGRES_CONTAINERID=$(docker-compose ps -q ${VIP_POSTGRES_SERVICE}) || die "Unable to obtain container id for compose service ${VIP_POSTGRES_SERVICE}"
-  # docker kill ${VIP_POSTGRES_CONTAINERID} || die "Unable to kill postgres container"
+  waitFor200 "http://${WS_SERVICE_IP}:80/test_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
   # This uses "service"
   info "Checking openagency.service call"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php "<oa:responder>710100</oa:responder>"
+  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php "<oa:responder>710100</oa:responder>"
   # But, we also want this, to check the log when debugging.
   info "Checking openagency.service call basic"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
+  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
   # This is related to VP-262
   info "Checking openagency.openSearchProfile call with missing agencyId"
-  checkServiceMatch "http://${HOST_IP}:${WS_SERVICE_PORT}/staging_2.34/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
+  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
+
+
+  info "Wait for gold service to start"
+  WS_SERVICE_GOLD_IP=$(getIPofContainer ${WS_SERVICE_GOLD})
+
+  info "WS_SERVICE_GOLD_IP=${WS_SERVICE_GOLD_IP}"
+  info "Waiting for ws container to be ready"
+  # The normal HowRU requires a bunch of data in the database and returns 503, when not ready.
+  # We just want - at this point - to make sure we are talking to the database
+  # and that the datamodel is sort of OK
+  # Abuse this to check that the service is running.
+  waitFor200 "http://${WS_SERVICE_GOLD_IP}:80/gold_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
+
+
 }
 
 # Print info about how to stop containers.

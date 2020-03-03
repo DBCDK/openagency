@@ -26,10 +26,14 @@ function setSysVars() {
 TESTRUN_PASSED=1
 function runTest() {
   info "Starting test"
-#  ${DOCKER_COMPOSE} up --force-recreate ${SOAPUI_SERVICE} || die "SOAPUI service start failed"
-#  RESULT=$(docker-compose ps -q ${SOAPUI_SERVICE} | xargs docker inspect -f '{{.State.ExitCode}}')
-  info "Test not yet implemented"
-  RESULT=0
+  JUNIT_RESULT_DIR=${BASE_DIR}/junit_results
+  [ -d "$JUNIT_RESULT_DIR" ] || mkdir "$JUNIT_RESULT_DIR"
+  JUNIT_RESULT_DIR=$(realpath "$JUNIT_RESULT_DIR")
+  info "Starting oa brute force tester"
+  TEST_IP=$(getIPofContainer "$WS_SERVICE")
+  GOLD_IP=$(getIPofContainer "$WS_SERVICE_GOLD")
+  docker run --rm -e BUILD_NUMBER --network=openagency-phpsystemtest_default -ti -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "http://$GOLD_IP:80/gold_oa/" "http://$TEST_IP:80/test_oa/"
+  RESULT=$?
   info "Result of test is : " ${RESULT}
   TESTRUN_PASSED=${RESULT}
 }

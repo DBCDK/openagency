@@ -1,4 +1,4 @@
-FROM docker.dbc.dk/dbc-apache-php7
+FROM docker.dbc.dk/dbc-apache-php7:old-202010
 
 LABEL maintainer="iScrum Team <iscrum@dbc.dk>" \
       APACHE_SERVER_NAME="The VirtualHost ServerName set for Apache. The global is set to localhost always. [localhost]" \

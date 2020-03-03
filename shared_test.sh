@@ -66,9 +66,7 @@ function check_on_path() {
 # Pulling is not performed, if we are running locally.
 function pullImages() {
   info "Updating non project images to newest from docker-i.dbc.dk. Errors are ignored."
-  docker pull ${VIP_POSTGRES_IMAGE}
-  docker pull ${VIP_CORE_IMAGE}
-  docker pull ${VIP_CORE_IMAGE_GOLD}
+  ${DOCKER_COMPOSE} pull --ignore-pull-failures ${VIP_POSTGRES_SERVICE} ${WS_SERVICE_GOLD}
 }
 
 # Start the basecontainers. These are the containers that are used in both tests.

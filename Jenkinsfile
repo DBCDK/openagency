@@ -198,6 +198,9 @@ pipeline {
     }
 
     post {
+        always {
+            junit '**/TEST-junit-jupiter.xml'
+        }
         // The intention is to differentiate between master and branches. For
         // * master : All developers gets mail (with log) on every failed build, and on fixed buils. Slack to #iscrum.
         //          : Also

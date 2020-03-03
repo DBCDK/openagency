@@ -142,7 +142,11 @@ function checkServiceMatch() {
 
 # get the ip of the named container
 function getIPofContainer( ) {
-  ${DOCKER_COMPOSE} exec $1 hostname -i | tr -d '\r'
+  ${DOCKER_COMPOSE} exec $1 hostname -i  | tr -d '\r'
+}
+
+function getIPAndPortOfContainer() {
+  docker-compose port openagency-php 80 | tr -d '\n'
 }
 
 # Wait for OK from the WS service.
@@ -151,25 +155,25 @@ function waitForOk() {
   # It is assumed that the proxy container is up very quickly, and that the vip db container is up quicker than the vip container.
 
   # Wait for the service/gui under test to be ready
-  WS_SERVICE_IP=$(getIPofContainer ${WS_SERVICE})
+  WS_SERVICE_IP_PORT=$(getIPAndPortOfContainer ${WS_SERVICE})
 
-  info "WS_SERVICE_IP=${WS_SERVICE_IP}"
+  info "WS_SERVICE_IP_PORT=${WS_SERVICE_IP_PORT}"
   info "Waiting for ws container to be ready"
   # The normal HowRU requires a bunch of data in the database and returns 503, when not ready.
   # We just want - at this point - to make sure we are talking to the database
   # and that the datamodel is sort of OK
   # Abuse this to check that the service is running.
-  waitFor200 "http://${WS_SERVICE_IP}:80/test_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
+  waitFor200 "http://${WS_SERVICE_IP_PORT}/test_oa/server.php?HowRU" 300 openagency-php || die "openagency-php service not ready in 300 seconds"
 
   # This uses "service"
   info "Checking openagency.service call"
-  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php "<oa:responder>710100</oa:responder>"
+  checkServiceMatch "http://${WS_SERVICE_IP_PORT}/test_oa/server.php?action=service&agencyId=710100&service=orsItemRequest" openagency-php "<oa:responder>710100</oa:responder>"
   # But, we also want this, to check the log when debugging.
   info "Checking openagency.service call basic"
-  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
+  checkServiceMatch "http://${WS_SERVICE_IP_PORT}/test_oa/server.php?action=openSearchProfile&agencyId=710100&profileName=foobar&profileVersion=3" openagency-php openSearchProfileResponse
   # This is related to VP-262
   info "Checking openagency.openSearchProfile call with missing agencyId"
-  checkServiceMatch "http://${WS_SERVICE_IP}:80/test_oa/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
+  checkServiceMatch "http://${WS_SERVICE_IP_PORT}/test_oa/server.php?action=openSearchProfile&agencyId=&profileVersion=3&trackingId=2019-10-02T14:40:09:509991:3648" openagency-php agency_not_found
 
 
   info "Wait for gold service to start"

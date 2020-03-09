@@ -10,4 +10,4 @@ set -e
 cd ${PROJECT_DIR}
 check_on_path build-dockers.py
 info "Building docker containers"
-build-dockers.py || die "Unable to build docker container"
+build-dockers.py "$@" || die "Unable to build docker container"

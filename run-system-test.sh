@@ -32,7 +32,7 @@ function runTest() {
   info "Starting oa brute force tester"
   TEST_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE")
   GOLD_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE_GOLD")
-  docker run --rm -e BUILD_NUMBER --network=${COMPOSE_PROJECT_NAME}_default -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/"
+  docker run --rm -e BUILD_NUMBER --network=${COMPOSE_PROJECT_NAME}_default -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester full "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/"
   RESULT=$?
   info "Result of test is : " ${RESULT}
   TESTRUN_PASSED=${RESULT}

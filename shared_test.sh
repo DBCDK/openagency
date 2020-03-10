@@ -73,6 +73,7 @@ function pullImages() {
 function startBaseContainers() {
   info "Starting base containers"
   ${DOCKER_COMPOSE} up --force-recreate -d  || die "docker-compose up -d "
+  docker pull docker-i.dbc.dk/oa-tester
 }
 
 # Arguments:

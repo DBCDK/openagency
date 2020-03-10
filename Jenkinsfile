@@ -78,24 +78,19 @@ pipeline {
         }
 
         stage("Integration tests") {
-            failFast true
-            parallel {
-                stage("Systemtest") {
-                    steps {
-                        script {
-                            echo "Running integration test on ${DOCKER_BUILD_TAG}"
-                            ansiColor("xterm") {
-                                sh """#!/usr/bin/env bash
+            steps {
+                script {
+                    echo "Running integration test on ${DOCKER_BUILD_TAG}"
+                    ansiColor("xterm") {
+                        sh """#!/usr/bin/env bash
                                 set -e                                
                                 ./run-system-test.sh --debug --pull --tag ${DOCKER_BUILD_TAG}
                                 """
-                            }
-                        }
                     }
                 }
             }
-         }
-
+        }
+        
         stage("Docker Push") {
             // If, we are on branch master, and tests passed, push to artifactory, using "push names"
             when {

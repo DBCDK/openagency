@@ -86,8 +86,7 @@ pipeline {
                             echo "Running integration test on ${DOCKER_BUILD_TAG}"
                             ansiColor("xterm") {
                                 sh """#!/usr/bin/env bash
-                                set -e
-                                pwd
+                                set -e                                
                                 ./run-system-test.sh --debug --pull --tag ${DOCKER_BUILD_TAG}
                                 """
                             }

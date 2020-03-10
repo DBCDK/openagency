@@ -2,17 +2,13 @@
 version: '3.3'
 
 services:
-  # We need a postgress server for VIP to initialize the database on.
+  # We need a postgress database with data for brute force testing
   vip-postgres:
     image: docker-i.dbc.dk/vip-dit-test-data
     expose:
       - 5432
     ports:
       - 5432
-
-  # And, an vip image to populate the database (and, that is all it does, folks).
-  # Note, that we depend on the latest build on master always. You will need
-  # to change this yourself, if you need to do otherwise, e.g. during testing.
 
   # The image under test
   openagency-php:
@@ -31,7 +27,7 @@ services:
     ports:
       - 80
 
-
+  # golden reference 
   openagency-gold:
     image: docker-i.dbc.dk/openagency-php:133
     environment:

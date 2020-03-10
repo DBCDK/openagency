@@ -158,5 +158,14 @@ if [ $d = true ] ; then
     debug "debug: $d, pull: ${pull}, keep: ${keep}, tag: ${tag}, help: ${help}"
 fi
 
+if [ "$keep" == "false" ] ; then
+     function finish {
+       # Your cleanup code here
+       stopContainers "${keep}"
+     }
+     trap finish EXIT
+fi
+
+
 main
 

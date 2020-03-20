@@ -32,17 +32,10 @@ export SCRIPT_DIR=$(dirname "$(readlink -f "$0")") || { echo "Unable to identify
 
 
 # Get (or update) the svn externals needed by OpenAgency.
-REPO234="https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/branches/iscrum-openagency-234"
 SVNREPO="https://svn.dbc.dk/repos/php/OpenLibrary/class_lib/trunk"
 EXTNAME="OLS_class_lib"
-# OA_234_REV="117239" # = Oracle OpenAgency 2.34 version
-# Originally this was 124719. But, we now pull slightly newer files of the first subset.
-OA_234_DIFF_REV="124827" # = PostgreSQL OpenAgency 2.34 version
-OA_234_DIFF_LIST="pg_database_class.php pg_wrapper_class.php"
 OA_234_DIFF_NS_REV="118899"
 OA_234_DIFF_NS_LIST="objconvert_class.php"
-OA_234_DIFF_JSON_REV="125858"
-OA_234_DIFF_JSON_LIST="verbose_json_class.php"
 
 
 set -e
@@ -57,18 +50,14 @@ if [ -d ${EXTNAME} ] ; then
     info "Updating svn repo in '${SRCDIR}/${EXTNAME}'"
     svn -q up || die "Error when updating svn repo in '${SRCDIR}/${EXTNAME}'"
     info "Svn repo  updated"
-    updateCherryPicks "$OA_234_DIFF_LIST" "$OA_234_DIFF_REV"
     updateCherryPicks "$OA_234_DIFF_NS_LIST" "$OA_234_DIFF_NS_REV"
-    updateCherryPicks "$OA_234_DIFF_JSON_LIST" "$OA_234_DIFF_JSON_REV"
     info "Svn repo in '${SRCDIR}/${EXTNAME}' updated"
 else
-    info "Checking out svn repo '${REPO234}' into directory '${SRCDIR}/${EXTNAME}'"
-    svn -q checkout ${REPO234} ${EXTNAME} || die "Unable to checkout svn repo '${REPO234}' into directory '${SRCDIR}/${EXTNAME}'"
-    info "Svn repo '${REPO234}' checked out into directory '${SRCDIR}/${EXTNAME}'"
+    info "Checking out svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
+    svn -q checkout ${SVNREPO} ${EXTNAME} || die "Unable to checkout svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
+    info "Svn repo '${SVNREPO}' checked out into directory '${SRCDIR}/${EXTNAME}'"
     cd ${EXTNAME} || die "Unable to change into directory '${SRCDIR}/${EXTNAME}'"
-    updateCherryPicks "$OA_234_DIFF_LIST" "$OA_234_DIFF_REV"
     updateCherryPicks "$OA_234_DIFF_NS_LIST" "$OA_234_DIFF_NS_REV"
-    updateCherryPicks "$OA_234_DIFF_JSON_LIST" "$OA_234_DIFF_JSON_REV"
 fi
 info "Svn info:"
 svn info | grep -e URL -e Revision -e Last

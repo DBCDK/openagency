@@ -63,13 +63,20 @@ as ordinary svn changes.
 
 See the [script/README](script/README.md) for additional info about build scripts.
 
-## Building
+## Development
 
-The project can be run "as is" in a properly configured Apache webserver, or you can build a docker image to test in.
+The project can be run "as is" in a the dev [docker-compose file](docker/compose/dev/docker-compose.yml)
+ 
 
-To build the docker image, the `build-dockers.py` tool is used. 
-In the root directory, use `scripts/build` or use the `build-dockers.py` script directly. 
+```bash
+./script/build
+./script/server
+./script/client
+```
 
+*Note* The development docker-compose uses a bind mount of the `.php` files into the docker images, so just start editing the `.php` files and rerun 
+in the browser window started by the `client` script
+  
 ## Test
 
 Tests are based on the docker images.

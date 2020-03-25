@@ -25,8 +25,8 @@ wsdl = openagency.wsdl
 ; --------------
 ; in_house_domain may use ?ShowInfo and use create_sample form
 ;in_house_domain = .dbc.dk
-;in_house_ip_list = 172.16.0.0-172.20.255.255;192.168.0.0-192.168.255.255
-in_house_ip_list = 172.16.0.0-172.20.255.255;192.168.0.0-192.168.255.255;10.0.0.1-10.255.255.255
+
+in_house_ip_list = 127.0.0.1;172.16.0.0-172.20.255.255;192.168.0.0-192.168.255.255;10.0.0.1-10.255.255.255
 
 ; --------------
 ; set to TRUE to expose the create_sample form
@@ -36,38 +36,38 @@ show_samples = 1
 ; --------------
 ; soapActions and their corresponding request structure
 ; Can be found in the wsdl but is stated here for convenience
-soapAction[automation] = automationRequest
-soapAction[bobTexts] = bobTextsRequest
-soapAction[borrowerCheckList] = borrowerCheckListRequest
-soapAction[encryption] = encryptionRequest
-soapAction[endUserOrderPolicy] = endUserOrderPolicyRequest
-soapAction[findLibrary] = findLibraryRequest
-soapAction[getCulrProfile] = getCulrProfileRequest
-soapAction[getRegistryInfo] = getRegistryInfoRequest
-soapAction[getSaouLicenseInfo] = getSaouLicenseInfoRequest
-soapAction[domainList] = domainListRequest
-soapAction[libraryRules] = libraryRulesRequest
-soapAction[libraryTypeList] = libraryTypeListRequest
-soapAction[nameList] = nameListRequest
-soapAction[pickupAgencyList] = pickupAgencyListRequest
-soapAction[openSearchProfile] = openSearchProfileRequest
-soapAction[remoteAccess] = remoteAccessRequest
-soapAction[requestOrder] = requestOrderRequest
-soapAction[searchCollection] = searchCollectionRequest
-soapAction[service] = serviceRequest
-soapAction[showOrder] = showOrderRequest
-;soapAction[proxyDomains] = proxyDomainsRequest
-;soapAction[proxyIp] = proxyIpRequest
+soapAction['automation'] = automationRequest
+soapAction['bobTexts'] = bobTextsRequest
+soapAction['borrowerCheckList'] = borrowerCheckListRequest
+soapAction['encryption'] = encryptionRequest
+soapAction['endUserOrderPolicy'] = endUserOrderPolicyRequest
+soapAction['findLibrary'] = findLibraryRequest
+soapAction['getCulrProfile'] = getCulrProfileRequest
+soapAction['getRegistryInfo'] = getRegistryInfoRequest
+soapAction['getSaouLicenseInfo'] = getSaouLicenseInfoRequest
+soapAction['domainList'] = domainListRequest
+soapAction['libraryRules'] = libraryRulesRequest
+soapAction['libraryTypeList'] = libraryTypeListRequest
+soapAction['nameList'] = nameListRequest
+soapAction['pickupAgencyList'] = pickupAgencyListRequest
+soapAction['openSearchProfile'] = openSearchProfileRequest
+soapAction['remoteAccess'] = remoteAccessRequest
+soapAction['requestOrder'] = requestOrderRequest
+soapAction['searchCollection'] = searchCollectionRequest
+soapAction['service'] = serviceRequest
+soapAction['showOrder'] = showOrderRequest
+;soapAction['proxyDomains'] = proxyDomainsRequest
+;soapAction['proxyIp'] = proxyIpRequest
 
 ; --------------
 ; validate
-validate[request] = openagency.xsd
-;validate[response] = openagency.xsd
+validate['request'] = openagency.xsd
+;validate['response'] = openagency.xsd
 
 ; --------------
 ; prefixes and namespaces
 default_namespace_prefix = oa
-xmlns[oa] = http://oss.dbc.dk/ns/openagency
+xmlns['oa'] = http://oss.dbc.dk/ns/openagency
 
 ; --------------
 xmldir = ./xml
@@ -104,21 +104,21 @@ agency_credentials = ${VIP_CREDENTIALS}
 ; --------------
 ; table for automatic interlibrary loan setting of material owned by the library
 ; first profile set below, will automatically be default profile
-profile_for_own_material[profil_1][age_in_days] = 365
-profile_for_own_material[profil_1][limit_in_days] = 14
-profile_for_own_material[profil_2][age_in_days] = 0
-profile_for_own_material[profil_2][limit_in_days] = 10
+profile_for_own_material['profil_1']['age_in_days'] = 365
+profile_for_own_material['profil_1']['limit_in_days'] = 14
+profile_for_own_material['profil_2']['age_in_days'] = 0
+profile_for_own_material['profil_2']['limit_in_days'] = 10
 
 ; --------------
 ; Change agencyType for a library
 ; as of 20150512, 700400 is Folkebibliotek som this is not neeeded any more
-;agencyTypeOverride[700400] = Folkebibliotek
+;agencyTypeOverride['700400'] = Folkebibliotek
 
 ; --------------
 ; DBC target address for order-systems
-dbc_target[z3950][address] = ${Z3950_URL}
-dbc_target[iso18626][address] = ${COPA_RS_URL}
-dbc_target[iso18626][password] = ${COPA_RS_PASSWD}
+dbc_target['z3950']['address'] = ${Z3950_URL}
+dbc_target['iso18626']['address'] = ${COPA_RS_URL}
+dbc_target['iso18626']['password'] = ${COPA_RS_PASSWD}
 
 
 ; --------------
@@ -127,12 +127,12 @@ cache_host = localhost
 cache_port = 11211
 cache_expire = 7200
 ;
-; each operation can be set to cache differently by setting cache_operation[operation] specifically
+; each operation can be set to cache differently by setting cache_operation['operation'] specifically
 ; like:
-;   cache_operation_expire[automation] = 600
+;   cache_operation_expire['automation'] = 600
 ; the operations can be found in soapAction.
 ; if cache_operation_expire is not set for operation(s), the cache_expire above will be used
-cache_operation_expire[libraryRules] = ${CACHE_EXPIRE_LIBRARYRULES}
+cache_operation_expire['libraryRules'] = ${CACHE_EXPIRE_LIBRARYRULES}
 
 ; ==============
 
@@ -142,28 +142,28 @@ cache_operation_expire[libraryRules] = ${CACHE_EXPIRE_LIBRARYRULES}
 ; Creates a authentication object from aaa_ip_rights, aaa_fors_rights or aaa_credentials - in that order
 ;
 ; Rights can be set here for selected ip-addresses
-; aaa_ip_rights[group-identifier][ip_list] = list of ip's
-; aaa_ip_rights[group-identifier][ressource][<named ressource>] = right to <named ressource>
-; aaa_ip_rights[group-identifier][ressource][<named ressource 2>] = right to <named ressource 2>
+; aaa_ip_rights[group-identifier]['ip_list'] = list of ip's
+; aaa_ip_rights[group-identifier]['ressource'][<named ressource>] = right to <named ressource>
+; aaa_ip_rights[group-identifier]['ressource'][<named ressource 2>] = right to <named ressource 2>
 ;
 ; Rights for service operations:
 ; remoteAccess: 550:
 ; getCulrProfile: 551
 ; all other: 500
-aaa_ip_rights[dbc][ip_list] = 172.16.0.0-172.31.255.255;193.111.162.0-193.111.162.255;192.168.0.0-192.168.255.255;10.0.0.1-10.255.255.255
-aaa_ip_rights[dbc][ressource]['netpunkt.dk'] = 500,550,551,552
-aaa_ip_rights[konform][ip_list] = 91.209.190.0-91.209.190.255;212.60.118.50-212.60.118.62
-aaa_ip_rights[konform][ressource]['netpunkt.dk'] = 500
-aaa_ip_rights[statsbiblioteket][ip_list] = 130.225.24.44;130.225.24.83
-aaa_ip_rights[statsbiblioteket][ressource]['netpunkt.dk'] = 500
-aaa_ip_rights[LMInformationDelivery][ip_list] = 74.208.102.11
-aaa_ip_rights[LMInformationDelivery][ressource]['netpunkt.dk'] = 500
-aaa_ip_rights[inlead][ip_list] = 52.29.166.250;178.168.59.134;178.168.80.187;217.26.165.99;46.137.118.67;46.137.126.132;46.51.174.76;46.51.182.186;46.51.183.5;46.51.183.77;54.228.180.162;54.246.84.109;54.246.96.64;77.233.245.14;79.125.6.101;80.199.116.190;89.28.117.221;90.184.193.155;91.203.63.22;91.203.63.22
-aaa_ip_rights[inlead][ressource]['netpunkt.dk'] = 500
-aaa_ip_rights[filmstriben][ip_list] = 146.192.168.164-146.192.168.166
-aaa_ip_rights[filmstriben][ressource]['netpunkt.dk'] = 500
-aaa_ip_rights[rlo][ip_list] = 91.100.19.120
-aaa_ip_rights[rlo][ressource]['netpunkt.dk'] = 500
+aaa_ip_rights['dbc']['ip_list'] = 127.0.0.1;172.16.0.0-172.31.255.255;193.111.162.0-193.111.162.255;192.168.0.0-192.168.255.255;10.0.0.1-10.255.255.255
+aaa_ip_rights['dbc']['ressource']['netpunkt.dk'] = 500,550,551,552
+aaa_ip_rights['konform']['ip_list'] = 91.209.190.0-91.209.190.255;212.60.118.50-212.60.118.62
+aaa_ip_rights['konform']['ressource']['netpunkt.dk'] = 500
+aaa_ip_rights['statsbiblioteket']['ip_list'] = 130.225.24.44;130.225.24.83
+aaa_ip_rights['statsbiblioteket']['ressource']['netpunkt.dk'] = 500
+aaa_ip_rights['LMInformationDelivery']['ip_list'] = 74.208.102.11
+aaa_ip_rights['LMInformationDelivery']['ressource']['netpunkt.dk'] = 500
+aaa_ip_rights['inlead']['ip_list'] = 52.29.166.250;178.168.59.134;178.168.80.187;217.26.165.99;46.137.118.67;46.137.126.132;46.51.174.76;46.51.182.186;46.51.183.5;46.51.183.77;54.228.180.162;54.246.84.109;54.246.96.64;77.233.245.14;79.125.6.101;80.199.116.190;89.28.117.221;90.184.193.155;91.203.63.22;91.203.63.22
+aaa_ip_rights['inlead']['ressource']['netpunkt.dk'] = 500
+aaa_ip_rights['filmstriben']['ip_list'] = 146.192.168.164-146.192.168.166
+aaa_ip_rights['filmstriben']['ressource']['netpunkt.dk'] = 500
+aaa_ip_rights['rlo']['ip_list'] = 91.100.19.120
+aaa_ip_rights['rlo']['ressource']['netpunkt.dk'] = 500
 
 ;
 ; if not found in aaa_ip_rights the authentication object is created from the FORS
@@ -189,8 +189,8 @@ aaa_cache_seconds = 7200
 ; REST parameters for SOAPactions
 ;
 ; use xml.path.to.par notation to solve name-conflicts
-; action[thisSoapAction][foo][] = some.number
-; action[thisSoapAction][bar][] = another.number
+; action['thisSoapAction']['foo'][] = some.number
+; action['thisSoapAction']['bar'][] = another.number
 ; to build
 ; <thisSoapAction>
 ;   <foo>
@@ -202,213 +202,213 @@ aaa_cache_seconds = 7200
 ; </thisSoapAction>
 ; from url: action=thisSoapAction&some.number=nn&another.number=mm
 ;
-action[automation][authentication][] = groupIdAut
-action[automation][authentication][] = passwordAut
-action[automation][authentication][] = userIdAut
-action[automation][] = agencyId
-action[automation][] = autService
-action[automation][] = materialType
-action[automation][] = callback
-action[automation][] = outputType
-action[automation][] = trackingId
+action['automation']['authentication'][] = groupIdAut
+action['automation']['authentication'][] = passwordAut
+action['automation']['authentication'][] = userIdAut
+action['automation'][] = agencyId
+action['automation'][] = autService
+action['automation'][] = materialType
+action['automation'][] = callback
+action['automation'][] = outputType
+action['automation'][] = trackingId
 
-action[bobTexts][authentication][] = groupIdAut
-action[bobTexts][authentication][] = passwordAut
-action[bobTexts][authentication][] = userIdAut
-action[bobTexts][] = agencyId
-action[bobTexts][] = callback
-action[bobTexts][] = outputType
-action[bobTexts][] = trackingId
+action['bobTexts']['authentication'][] = groupIdAut
+action['bobTexts']['authentication'][] = passwordAut
+action['bobTexts']['authentication'][] = userIdAut
+action['bobTexts'][] = agencyId
+action['bobTexts'][] = callback
+action['bobTexts'][] = outputType
+action['bobTexts'][] = trackingId
 
-action[borrowerCheckList][authentication][] = groupIdAut
-action[borrowerCheckList][authentication][] = passwordAut
-action[borrowerCheckList][authentication][] = userIdAut
-action[borrowerCheckList][] = serviceRequester
-action[borrowerCheckList][] = borrowerCheckAllowed
-action[borrowerCheckList][] = callback
-action[borrowerCheckList][] = outputType
-action[borrowerCheckList][] = trackingId
+action['borrowerCheckList']['authentication'][] = groupIdAut
+action['borrowerCheckList']['authentication'][] = passwordAut
+action['borrowerCheckList']['authentication'][] = userIdAut
+action['borrowerCheckList'][] = serviceRequester
+action['borrowerCheckList'][] = borrowerCheckAllowed
+action['borrowerCheckList'][] = callback
+action['borrowerCheckList'][] = outputType
+action['borrowerCheckList'][] = trackingId
 
-action[domainList][authentication][] = groupIdAut
-action[domainList][authentication][] = passwordAut
-action[domainList][authentication][] = userIdAut
-action[domainList][] = agencyId
-action[domainList][] = domain
-action[domainList][] = callback
-action[domainList][] = outputType
-action[domainList][] = trackingId
+action['domainList']['authentication'][] = groupIdAut
+action['domainList']['authentication'][] = passwordAut
+action['domainList']['authentication'][] = userIdAut
+action['domainList'][] = agencyId
+action['domainList'][] = domain
+action['domainList'][] = callback
+action['domainList'][] = outputType
+action['domainList'][] = trackingId
 
-action[encryption][authentication][] = groupIdAut
-action[encryption][authentication][] = passwordAut
-action[encryption][authentication][] = userIdAut
-action[encryption][] = email
-action[encryption][] = callback
-action[encryption][] = outputType
-action[encryption][] = trackingId
+action['encryption']['authentication'][] = groupIdAut
+action['encryption']['authentication'][] = passwordAut
+action['encryption']['authentication'][] = userIdAut
+action['encryption'][] = email
+action['encryption'][] = callback
+action['encryption'][] = outputType
+action['encryption'][] = trackingId
 
-action[endUserOrderPolicy][authentication][] = groupIdAut
-action[endUserOrderPolicy][authentication][] = passwordAut
-action[endUserOrderPolicy][authentication][] = userIdAut
-action[endUserOrderPolicy][] = agencyId
-action[endUserOrderPolicy][] = orderMaterialType
-action[endUserOrderPolicy][] = ownedByAgency
-action[endUserOrderPolicy][] = callback
-action[endUserOrderPolicy][] = outputType
-action[endUserOrderPolicy][] = trackingId
+action['endUserOrderPolicy']['authentication'][] = groupIdAut
+action['endUserOrderPolicy']['authentication'][] = passwordAut
+action['endUserOrderPolicy']['authentication'][] = userIdAut
+action['endUserOrderPolicy'][] = agencyId
+action['endUserOrderPolicy'][] = orderMaterialType
+action['endUserOrderPolicy'][] = ownedByAgency
+action['endUserOrderPolicy'][] = callback
+action['endUserOrderPolicy'][] = outputType
+action['endUserOrderPolicy'][] = trackingId
 
-action[findLibrary][authentication][] = groupIdAut
-action[findLibrary][authentication][] = passwordAut
-action[findLibrary][authentication][] = userIdAut
-action[findLibrary][] = agencyId
-action[findLibrary][] = agencyName
-action[findLibrary][] = agencyAddress
-action[findLibrary][] = postalCode
-action[findLibrary][] = city
-action[findLibrary][] = stilNumber
-action[findLibrary][] = anyField
-action[findLibrary][] = libraryType
-action[findLibrary][] = libraryStatus
-action[findLibrary][] = pickupAllowed
-action[findLibrary][] = sort
-action[findLibrary][] = callback
-action[findLibrary][] = outputType
-action[findLibrary][] = trackingId
+action['findLibrary']['authentication'][] = groupIdAut
+action['findLibrary']['authentication'][] = passwordAut
+action['findLibrary']['authentication'][] = userIdAut
+action['findLibrary'][] = agencyId
+action['findLibrary'][] = agencyName
+action['findLibrary'][] = agencyAddress
+action['findLibrary'][] = postalCode
+action['findLibrary'][] = city
+action['findLibrary'][] = stilNumber
+action['findLibrary'][] = anyField
+action['findLibrary'][] = libraryType
+action['findLibrary'][] = libraryStatus
+action['findLibrary'][] = pickupAllowed
+action['findLibrary'][] = sort
+action['findLibrary'][] = callback
+action['findLibrary'][] = outputType
+action['findLibrary'][] = trackingId
 
-action[getCulrProfile][authentication][] = groupIdAut
-action[getCulrProfile][authentication][] = passwordAut
-action[getCulrProfile][authentication][] = userIdAut
-action[getCulrProfile][] = agencyId
-action[getCulrProfile][] = callback
-action[getCulrProfile][] = outputType
-action[getCulrProfile][] = trackingId
+action['getCulrProfile']['authentication'][] = groupIdAut
+action['getCulrProfile']['authentication'][] = passwordAut
+action['getCulrProfile']['authentication'][] = userIdAut
+action['getCulrProfile'][] = agencyId
+action['getCulrProfile'][] = callback
+action['getCulrProfile'][] = outputType
+action['getCulrProfile'][] = trackingId
 
-action[getRegistryInfo][authentication][] = groupIdAut
-action[getRegistryInfo][authentication][] = passwordAut
-action[getRegistryInfo][authentication][] = userIdAut
-action[getRegistryInfo][] = agencyId
-action[getRegistryInfo][] = agencyName
-action[getRegistryInfo][] = lastUpdated
-action[getRegistryInfo][] = libraryType
-action[getRegistryInfo][] = libraryStatus
-action[getRegistryInfo][] = callback
-action[getRegistryInfo][] = outputType
-action[getRegistryInfo][] = trackingId
+action['getRegistryInfo']['authentication'][] = groupIdAut
+action['getRegistryInfo']['authentication'][] = passwordAut
+action['getRegistryInfo']['authentication'][] = userIdAut
+action['getRegistryInfo'][] = agencyId
+action['getRegistryInfo'][] = agencyName
+action['getRegistryInfo'][] = lastUpdated
+action['getRegistryInfo'][] = libraryType
+action['getRegistryInfo'][] = libraryStatus
+action['getRegistryInfo'][] = callback
+action['getRegistryInfo'][] = outputType
+action['getRegistryInfo'][] = trackingId
 
-action[getSaouLicenseInfo][authentication][] = groupIdAut
-action[getSaouLicenseInfo][authentication][] = passwordAut
-action[getSaouLicenseInfo][authentication][] = userIdAut
-action[getSaouLicenseInfo][] = agencyId
-action[getSaouLicenseInfo][] = callback
-action[getSaouLicenseInfo][] = outputType
-action[getSaouLicenseInfo][] = trackingId
+action['getSaouLicenseInfo']['authentication'][] = groupIdAut
+action['getSaouLicenseInfo']['authentication'][] = passwordAut
+action['getSaouLicenseInfo']['authentication'][] = userIdAut
+action['getSaouLicenseInfo'][] = agencyId
+action['getSaouLicenseInfo'][] = callback
+action['getSaouLicenseInfo'][] = outputType
+action['getSaouLicenseInfo'][] = trackingId
 
-action[libraryRules][authentication][] = groupIdAut
-action[libraryRules][authentication][] = passwordAut
-action[libraryRules][authentication][] = userIdAut
-action[libraryRules][] = agencyId
-action[libraryRules][libraryRule][] = name
-action[libraryRules][libraryRule][] = bool
-action[libraryRules][libraryRule][] = string
-action[libraryRules][] = callback
-action[libraryRules][] = outputType
-action[libraryRules][] = trackingId
+action['libraryRules']['authentication'][] = groupIdAut
+action['libraryRules']['authentication'][] = passwordAut
+action['libraryRules']['authentication'][] = userIdAut
+action['libraryRules'][] = agencyId
+action['libraryRules']['libraryRule'][] = name
+action['libraryRules']['libraryRule'][] = bool
+action['libraryRules']['libraryRule'][] = string
+action['libraryRules'][] = callback
+action['libraryRules'][] = outputType
+action['libraryRules'][] = trackingId
 
-action[libraryTypeList][authentication][] = groupIdAut
-action[libraryTypeList][authentication][] = passwordAut
-action[libraryTypeList][authentication][] = userIdAut
-action[libraryTypeList][] = callback
-action[libraryTypeList][] = outputType
-action[libraryTypeList][] = trackingId
+action['libraryTypeList']['authentication'][] = groupIdAut
+action['libraryTypeList']['authentication'][] = passwordAut
+action['libraryTypeList']['authentication'][] = userIdAut
+action['libraryTypeList'][] = callback
+action['libraryTypeList'][] = outputType
+action['libraryTypeList'][] = trackingId
 
-action[nameList][authentication][] = groupIdAut
-action[nameList][authentication][] = passwordAut
-action[nameList][authentication][] = userIdAut
-action[nameList][] = libraryType
-action[nameList][] = callback
-action[nameList][] = outputType
-action[nameList][] = trackingId
+action['nameList']['authentication'][] = groupIdAut
+action['nameList']['authentication'][] = passwordAut
+action['nameList']['authentication'][] = userIdAut
+action['nameList'][] = libraryType
+action['nameList'][] = callback
+action['nameList'][] = outputType
+action['nameList'][] = trackingId
 
-action[pickupAgencyList][authentication][] = groupIdAut
-action[pickupAgencyList][authentication][] = passwordAut
-action[pickupAgencyList][authentication][] = userIdAut
-action[pickupAgencyList][] = agencyId
-action[pickupAgencyList][] = agencyName
-action[pickupAgencyList][] = agencyAddress
-action[pickupAgencyList][] = postalCode
-action[pickupAgencyList][] = city
-action[pickupAgencyList][] = libraryType
-action[pickupAgencyList][] = libraryStatus
-action[pickupAgencyList][] = pickupAllowed
-action[pickupAgencyList][] = callback
-action[pickupAgencyList][] = outputType
-action[pickupAgencyList][] = trackingId
+action['pickupAgencyList']['authentication'][] = groupIdAut
+action['pickupAgencyList']['authentication'][] = passwordAut
+action['pickupAgencyList']['authentication'][] = userIdAut
+action['pickupAgencyList'][] = agencyId
+action['pickupAgencyList'][] = agencyName
+action['pickupAgencyList'][] = agencyAddress
+action['pickupAgencyList'][] = postalCode
+action['pickupAgencyList'][] = city
+action['pickupAgencyList'][] = libraryType
+action['pickupAgencyList'][] = libraryStatus
+action['pickupAgencyList'][] = pickupAllowed
+action['pickupAgencyList'][] = callback
+action['pickupAgencyList'][] = outputType
+action['pickupAgencyList'][] = trackingId
 
-action[openSearchProfile][authentication][] = groupIdAut
-action[openSearchProfile][authentication][] = passwordAut
-action[openSearchProfile][authentication][] = userIdAut
-action[openSearchProfile][] = agencyId
-action[openSearchProfile][] = profileName
-action[openSearchProfile][] = profileVersion
-action[openSearchProfile][] = callback
-action[openSearchProfile][] = outputType
-action[openSearchProfile][] = trackingId
+action['openSearchProfile']['authentication'][] = groupIdAut
+action['openSearchProfile']['authentication'][] = passwordAut
+action['openSearchProfile']['authentication'][] = userIdAut
+action['openSearchProfile'][] = agencyId
+action['openSearchProfile'][] = profileName
+action['openSearchProfile'][] = profileVersion
+action['openSearchProfile'][] = callback
+action['openSearchProfile'][] = outputType
+action['openSearchProfile'][] = trackingId
 
-action[remoteAccess][authentication][] = groupIdAut
-action[remoteAccess][authentication][] = passwordAut
-action[remoteAccess][authentication][] = userIdAut
-action[remoteAccess][] = agencyId
-action[remoteAccess][] = callback
-action[remoteAccess][] = outputType
-action[remoteAccess][] = trackingId
+action['remoteAccess']['authentication'][] = groupIdAut
+action['remoteAccess']['authentication'][] = passwordAut
+action['remoteAccess']['authentication'][] = userIdAut
+action['remoteAccess'][] = agencyId
+action['remoteAccess'][] = callback
+action['remoteAccess'][] = outputType
+action['remoteAccess'][] = trackingId
 
-action[requestOrder][authentication][] = groupIdAut
-action[requestOrder][authentication][] = passwordAut
-action[requestOrder][authentication][] = userIdAut
-action[requestOrder][] = agencyId
-action[requestOrder][] = callback
-action[requestOrder][] = outputType
-action[requestOrder][] = trackingId
+action['requestOrder']['authentication'][] = groupIdAut
+action['requestOrder']['authentication'][] = passwordAut
+action['requestOrder']['authentication'][] = userIdAut
+action['requestOrder'][] = agencyId
+action['requestOrder'][] = callback
+action['requestOrder'][] = outputType
+action['requestOrder'][] = trackingId
 
-action[searchCollection][authentication][] = groupIdAut
-action[searchCollection][authentication][] = passwordAut
-action[searchCollection][authentication][] = userIdAut
-action[searchCollection][] = agencyId
-action[searchCollection][] = callback
-action[searchCollection][] = outputType
-action[searchCollection][] = trackingId
+action['searchCollection']['authentication'][] = groupIdAut
+action['searchCollection']['authentication'][] = passwordAut
+action['searchCollection']['authentication'][] = userIdAut
+action['searchCollection'][] = agencyId
+action['searchCollection'][] = callback
+action['searchCollection'][] = outputType
+action['searchCollection'][] = trackingId
 
-action[service][authentication][] = groupIdAut
-action[service][authentication][] = passwordAut
-action[service][authentication][] = userIdAut
-action[service][] = agencyId
-action[service][] = service
-action[service][] = callback
-action[service][] = outputType
-action[service][] = trackingId
+action['service']['authentication'][] = groupIdAut
+action['service']['authentication'][] = passwordAut
+action['service']['authentication'][] = userIdAut
+action['service'][] = agencyId
+action['service'][] = service
+action['service'][] = callback
+action['service'][] = outputType
+action['service'][] = trackingId
 
-action[showOrder][authentication][] = groupIdAut
-action[showOrder][authentication][] = passwordAut
-action[showOrder][authentication][] = userIdAut
-action[showOrder][] = agencyId
-action[showOrder][] = callback
-action[showOrder][] = outputType
-action[showOrder][] = trackingId
+action['showOrder']['authentication'][] = groupIdAut
+action['showOrder']['authentication'][] = passwordAut
+action['showOrder']['authentication'][] = userIdAut
+action['showOrder'][] = agencyId
+action['showOrder'][] = callback
+action['showOrder'][] = outputType
+action['showOrder'][] = trackingId
 
-;action[proxyDomains][authentication][] = groupIdAut
-;action[proxyDomains][authentication][] = passwordAut
-;action[proxyDomains][authentication][] = userIdAut
-;action[proxyDomains][] = agencyId
-;action[proxyDomains][] = callback
-;action[proxyDomains][] = outputType
-;action[proxyDomains][] = trackingId
+;action['proxyDomains']['authentication'][] = groupIdAut
+;action['proxyDomains']['authentication'][] = passwordAut
+;action['proxyDomains']['authentication'][] = userIdAut
+;action['proxyDomains'][] = agencyId
+;action['proxyDomains'][] = callback
+;action['proxyDomains'][] = outputType
+;action['proxyDomains'][] = trackingId
 
-;action[proxyIp][authentication][] = groupIdAut
-;action[proxyIp][authentication][] = passwordAut
-;action[proxyIp][authentication][] = userIdAut
-;action[proxyIp][] = agencyId
-;action[proxyIp][] = callback
-;action[proxyIp][] = outputType
-;action[proxyIp][] = trackingId
+;action['proxyIp']['authentication'][] = groupIdAut
+;action['proxyIp']['authentication'][] = passwordAut
+;action['proxyIp']['authentication'][] = userIdAut
+;action['proxyIp'][] = agencyId
+;action['proxyIp'][] = callback
+;action['proxyIp'][] = outputType
+;action['proxyIp'][] = trackingId
 
 ; ==============
 

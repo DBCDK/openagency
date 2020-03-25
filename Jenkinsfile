@@ -184,8 +184,7 @@ pipeline {
             steps {
                 script {
                     dir("deploy") {
-                        // sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
-                        echo "____ DIT update disabled _____"
+                        sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
                     }
                 }
             }

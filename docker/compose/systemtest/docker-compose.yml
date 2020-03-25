@@ -16,7 +16,7 @@ services:
     environment:
       - VIP_CREDENTIALS=psql://vip:vippass@vip-postgres:5432/vip_db
       - URL_PATH=test_oa
-      - FORS_RIGHTS=https://forsrights.addi.dk/1.2/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
+      - FORS_RIGHTS=https://forsrights.addi.dk/2.0/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
       - APACHE_SERVER_NAME=localhost
       - COPA_RS_URL=https://iso18626.addi.dk/copa-rs/app/iso18626/
       - COPA_RS_PASSWD=xxxxxxxxxxxx
@@ -27,21 +27,21 @@ services:
     ports:
       - 80
 
-  # golden reference 
+  # golden reference
   openagency-gold:
     image: docker-i.dbc.dk/openagency-php:133
     environment:
-    - VIP_CREDENTIALS=psql://vip:vippass@vip-postgres:5432/vip_db
-    - URL_PATH=gold_oa
-    - FORS_RIGHTS=https://forsrights.addi.dk/1.2/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
-    - APACHE_SERVER_NAME=localhost
-    - COPA_RS_URL=https://iso18626.addi.dk/copa-rs/app/iso18626/
-    - COPA_RS_PASSWD=xxxxxxxxxxxx
+      - VIP_CREDENTIALS=psql://vip:vippass@vip-postgres:5432/vip_db
+      - URL_PATH=gold_oa
+      - FORS_RIGHTS=https://forsrights.addi.dk/2.0/?action=forsRights&outputType=php&userIdAut=%s&groupIdAut=%s&passwordAut=%s&ipAddress=%s
+      - APACHE_SERVER_NAME=localhost
+      - COPA_RS_URL=https://iso18626.addi.dk/copa-rs/app/iso18626/
+      - COPA_RS_PASSWD=xxxxxxxxxxxx
     depends_on:
-    - "vip-postgres"
+      - "vip-postgres"
     expose:
-    - 80
+      - 80
     ports:
-    - 80
+      - 80
 
 

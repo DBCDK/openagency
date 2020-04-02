@@ -142,7 +142,11 @@ function checkServiceMatch() {
 }
 
 function getIPAndPortOfContainer() {
-  ${DOCKER_COMPOSE} port $1 80 | sed -e "s-0.0.0.0-${HOST_IP}-" | tr -d '\n'
+  ${DOCKER_COMPOSE} port "$1" 80 | sed -e "s-0.0.0.0-${HOST_IP}-" | tr -d '\n'
+}
+
+function getLast25ErrorLogLinesOfContainer() {
+  ${DOCKER_COMPOSE} logs --no-color "$1" | cut -f 2- -d '|' | grep '{' | grep PHP | jq -Cc '. | select(.level=="ERROR")' | tail -n 25
 }
 
 # Wait for OK from the WS service.

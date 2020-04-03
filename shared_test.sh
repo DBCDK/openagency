@@ -141,12 +141,20 @@ function checkServiceMatch() {
     return 1
 }
 
+# Arguments:
+# 1: container name from docker file
 function getIPAndPortOfContainer() {
   ${DOCKER_COMPOSE} port "$1" 80 | sed -e "s-0.0.0.0-${HOST_IP}-" | tr -d '\n'
 }
 
+# Arguments:
+# 1: container name from docker file
 function getLast25ErrorLogLinesOfContainer() {
-  ${DOCKER_COMPOSE} logs --no-color "$1" | cut -f 2- -d '|' | grep '{' | grep PHP | jq -Cc '. | select(.level=="ERROR")' | tail -n 25
+  ## count errors befors fetching once more to avoid  script failing from pipefail
+  php_error_count=$(${DOCKER_COMPOSE} logs --no-color "$1" | cut -f 2- -d '|' | grep '{' | jq -Cc '. | select(.level=="ERROR")' | grep -c PHP)
+  if [[ ! "$php_error_count" ]] ; then
+    ${DOCKER_COMPOSE} logs --no-color "$1" | cut -f 2- -d '|' | grep '{' | jq -Cc '. | select(.level=="ERROR")' | grep PHP |  tail -n 25
+  fi
 }
 
 # Wait for OK from the WS service.

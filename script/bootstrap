@@ -43,5 +43,6 @@ else
     svn -q checkout ${SVNREPO} ${EXTNAME} || die "Unable to checkout svn repo '${SVNREPO}' into directory '${SRCDIR}/${EXTNAME}'"
     info "Svn repo '${SVNREPO}' checked out into directory '${SRCDIR}/${EXTNAME}'"
 fi
+cd "${SRCDIR}/${EXTNAME}"
 info "Svn info:"
 svn info | grep -e URL -e Revision -e Last

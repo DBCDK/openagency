@@ -6,3 +6,4 @@ index.php
 openagency.ini
 openagency.wsdl
 junit_results/
+*.log

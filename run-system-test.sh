@@ -32,8 +32,15 @@ function runTest() {
   info "Starting oa brute force tester"
   TEST_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE")
   GOLD_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE_GOLD")
-  docker run --rm -e BUILD_NUMBER -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester full "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/"
+  docker run --rm -e BUILD_NUMBER -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "$brute_force_mode" "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/"
   RESULT=$?
+  if [[ $RESULT = 0 ]]; then
+     ERROR_LINES=$(getLast25ErrorLogLinesOfContainer "$WS_SERVICE")
+     if [ -n "${ERROR_LINES}" ] ; then
+       RESULT=123;
+     fi
+  fi
+
   info "Result of test is : " ${RESULT}
   TESTRUN_PASSED=${RESULT}
 }
@@ -56,7 +63,9 @@ function main()  {
   RESULT=$(( ${TESTRUN_PASSED} ))
   if [[ ${RESULT} -ne 0 ]] ; then
     info "Dumping logs from ws image"
-    ${DOCKER_COMPOSE} logs ${WS_SERVICE}
+    getLast25ErrorLogLinesOfContainer "$WS_SERVICE"
+    ${DOCKER_COMPOSE} logs ${WS_SERVICE} > systemtest_openagency-php.log
+    info "See more error lines in $(realpath systemtest_openagency-php.log)"
   fi
 
   stopContainers ${keep}
@@ -78,6 +87,7 @@ function usage() {
     echo
     echo "Options:"
     echo
+    echo "-f, --fast              Run brute force test in fast mode.. only use for developer mode"
     echo "-t, --tag <tag>         Tag to use all for all images [${tag}]"
     echo "-p, --pull              Pull/update non-project containers from repo"
     echo "-d, --debug             Output extra debug information"
@@ -95,10 +105,10 @@ if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
 fi
 
 # Global options. Set below, when parsing the command line.
-d=false pull=false tag="latest" keep=false
+d=false pull=false tag="latest" keep=false brute_force_mode=full
 
-OPTIONS=dhpt:k
-LONGOPTS=debug,help,pull,tag:,keep
+OPTIONS=dhpt:kf
+LONGOPTS=debug,help,pull,tag:,keep,fast
 
 # -use ! and PIPESTATUS to get exit code with errexit set
 # -temporarily store output to be able to check for errors
@@ -136,6 +146,10 @@ while true; do
         -h|--help)
             usage
             exit 0
+            ;;
+        -f|--fast)
+            brute_force_mode=fast
+            shift
             ;;
         --)
             shift

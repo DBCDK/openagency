@@ -115,10 +115,13 @@ class openAgency extends webServiceServer {
                   _Object::set_value($ap, 'materialType', $param->materialType->_value);
                   $this->watch->start('fetch');
                   $vf_rows = $oci->fetch_all_into_assoc();
-                  foreach ($vf_rows as $vf_row) {
-                    if ($vf_row['LAANGIVER']) {
-                      _Object::set_array_value($ap, 'responder', $vf_row['LAANGIVER']);
-                    }
+                  if ( $vf_rows ) {
+                      foreach ($vf_rows as $vf_row) {
+                          if ($vf_row['LAANGIVER']) {
+                              _Object::set_array_value($ap, 'responder',
+                                  $vf_row['LAANGIVER']);
+                          }
+                      }
                   }
                   $this->watch->stop('fetch');
                 }
@@ -3491,19 +3494,7 @@ class openAgency extends webServiceServer {
     list($subnet, $mask) = explode('/', $cidr);
     return ((ip2long($ip) & ~((1 << (32 - $mask)) - 1) ) == ip2long($subnet));
   }
-
-
-  protected function ja7DebugDebug($functionName, $timings ) {
-    $vtext = 'HEST';
-    $date_format = 'H:i:s-d/m/y';
-    $trackingId = "os:x<x";
-    $timings = str_replace(PHP_EOL, '', $timings );
-    if ($fp = @ fopen('php://stdout', 'a')) {
-      fwrite($fp, $vtext . ' ' . date($date_format) . ' ' . $trackingId. ' opensearch(' . $functionName .'):: '. $timings . PHP_EOL);
-      fclose($fp);
-    }
-  }
-
+  
 
 }
 

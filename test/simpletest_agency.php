@@ -70,11 +70,11 @@ class TestOfAgency extends WebTestCase {
             'text' => array('0'),
             'pattern' => array('/willReceive.*condition.*endUserOrderPolicyResponse/'));
   // findLibrary
-    $this->test_cases[] = 
-      array('action' => array('post' => 'findLibraryRequest', 'get' => 'findLibrary'),
-            'pars' => array('agencyId' => 'DK-710100'),
-            'text' => array('Krystalgade', '1172'),
-            'pattern' => array('/pickupAgency.*branchName.*postalCode.*openingHours.*findLibraryResponse/'));
+//    $this->test_cases[] =
+//      array('action' => array('post' => 'findLibraryRequest', 'get' => 'findLibrary'),
+//            'pars' => array('agencyId' => 'DK-710100'),
+//            'text' => array('Krystalgade', '1172'),
+//            'pattern' => array('/pickupAgency.*branchName.*postalCode.*openingHours.*findLibraryResponse/'));
   // getCulrProfile
     $this->test_cases[] = 
       array('action' => array('post' => 'getCulrProfileRequest', 'get' => 'getCulrProfile'),

@@ -32,13 +32,20 @@ function runTest() {
   info "Starting oa brute force tester"
   TEST_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE")
   GOLD_IP_PORT=$(getIPAndPortOfContainer "$WS_SERVICE_GOLD")
-  docker run --rm -e BUILD_NUMBER -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "$brute_force_mode" "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/"
+  set +e # manually handle exit code from os-tester
+  docker run --rm -e BUILD_NUMBER -v "$JUNIT_RESULT_DIR:/output" docker-i.dbc.dk/oa-tester "$brute_force_mode" "http://$GOLD_IP_PORT/gold_oa/" "http://$TEST_IP_PORT/test_oa/" 
   RESULT=$?
+  set -e  # reset normale script -e mode 
+
   if [[ $RESULT = 0 ]]; then
      ERROR_LINES=$(getLast25ErrorLogLinesOfContainer "$WS_SERVICE")
      if [ -n "${ERROR_LINES}" ] ; then
        RESULT=123;
      fi
+  fi
+
+  if [[ $RESULT != 0 ]] ; then
+    RESULT=123
   fi
 
   info "Result of test is : " ${RESULT}
@@ -176,6 +183,11 @@ if [ "$keep" == "false" ] ; then
      function finish {
        # Your cleanup code here
        stopContainers "${keep}"
+       info "Saved by the BELL -- landed in trap handler"
+       if [ -n "$TESTRUN_PASSED" ] ; then
+         exit $TESTRUN_PASSED
+       fi
+       exit 131
      }
      trap finish EXIT
 fi

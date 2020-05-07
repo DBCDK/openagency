@@ -82,10 +82,26 @@ pipeline {
                 script {
                     echo "Running integration test on ${DOCKER_BUILD_TAG}"
                     ansiColor("xterm") {
-                        sh """#!/usr/bin/env bash
-                                set -e                                
-                                ./run-system-test.sh --debug --pull --tag ${DOCKER_BUILD_TAG}
-                                """
+                        def rc=sh script: "./run-system-test.sh --debug --pull --tag ${DOCKER_BUILD_TAG}", returnStatus: true
+
+                        junit '**/TEST-junit-jupiter.xml'
+
+                        echo "./run-system-test.sh exit code ${rc}"
+
+                        if ( rc != 0 ) {
+                            if( rc == 123 ) { // Special case // ./run-system-test exit with exit code 123 on bft errors
+                                def res;
+                                timeout(time: 1, unit: "HOURS") {
+                                    res=input message: 'Continue Build Despite of Brute-force-test failures', parameters: [booleanParam(defaultValue: false, description: 'Check BRUTE force test results', name: 'only_expected_failures')], submitterParameter: 'APPROVER'
+                                }
+                                echo "APPROVER = ${res.APPROVER} --- ${res.only_expected_failures}";
+                                if( ! res.only_expected_failures ) {
+                                    currentBuild.result = "FAILURE"
+                                }
+                            } else {
+                                currentBuild.result = "FAILURE"
+                            }
+                        }
                     }
                 }
             }
@@ -192,9 +208,6 @@ pipeline {
     }
 
     post {
-        always {
-            junit '**/TEST-junit-jupiter.xml'
-        }
         // The intention is to differentiate between master and branches. For
         // * master : All developers gets mail (with log) on every failed build, and on fixed buils. Slack to #iscrum.
         //          : Also

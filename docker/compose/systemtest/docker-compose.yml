@@ -29,7 +29,7 @@ services:
 
   # golden reference
   openagency-gold:
-    image: docker-i.dbc.dk/openagency-php:133
+    image: docker-i.dbc.dk/openagency-php:207
     environment:
       - VIP_CREDENTIALS=psql://vip:vippass@vip-postgres:5432/vip_db
       - URL_PATH=gold_oa

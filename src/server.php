@@ -589,8 +589,8 @@ class openAgency extends webServiceServer {
           }
           // agencyName
           if ($val = $param->agencyName->_value) {
-            $sqls[] = '(LOWER(v.navn) SIMILAR TO upper(:bind_navn)' .
-                      ' OR (LOWER(sup.tekst) SIMILAR TO upper(:bind_navn) AND sup.type = :bind_n))';
+            $sqls[] = '(LOWER(v.navn) SIMILAR TO LOWER(:bind_navn)' .
+                      ' OR (LOWER(sup.tekst) SIMILAR TO LOWER(:bind_navn) AND sup.type = :bind_n))';
             $oci->bind('bind_navn', self::build_PostgreSQL_like($val));
             $oci->bind('bind_n', 'N');
           }

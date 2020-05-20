@@ -881,13 +881,15 @@ class openAgency extends webServiceServer {
               foreach ($profile as $profile_name => $kilde_ids) {
                 foreach ($kilde_ids as $kilde_id) {
                     $kilde=$kilder[$kilde_id];
-                    $accessFor=$kilder[$kilde_id]['ACCESS_FOR'];
+                    $accessFor=$kilde['ACCESS_FOR'];
+                    $identifier=$kilde['IDENTIFIER'];
+                    $name=$kilde['NAME'];
 
                     if ($kilde && (empty($accessFor) || strpos($accessFor, (string)$agency) !== FALSE)) {
-                        _Object::set_value($s->_value, 'sourceName', $kilder[$kilde_id]['NAME']);
-                        _Object::set_value($s->_value, 'sourceIdentifier', str_replace('[agency]', $agency, $kilder[$kilde_id]['IDENTIFIER']));
-                        if(! $source[$kilder[$kilde_id]['IDENTIFIER']]) {
-                            $source[$kilder[$kilde_id]['IDENTIFIER']] = $s;
+                        _Object::set_value($s->_value, 'sourceName', $name);
+                        _Object::set_value($s->_value, 'sourceIdentifier', str_replace('[agency]', $agency, $identifier));
+                        if(! $source[$identifier]) {
+                            $source[$identifier] = $s;
                         }
                         unset($s);
                     }

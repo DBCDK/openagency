@@ -45,6 +45,15 @@ class openAgency extends webServiceServer {
     $this->cache_expire = $this->config->get_value('cache_operation_expire', 'setup');
   }
 
+    /** \brief Logs the outputType of reponse.
+     */
+  private function logResponseType($param) {
+      if (empty($param->outputType->_value)) {
+          VerboseJson::log(STAT, 'outputType: empty, defaulting to xml');
+      } else {
+          VerboseJson::log(STAT, 'outputType: ' . $param->outputType->_value);
+      }
+  }
 
   /** \brief Fetch information about automation of ILL
    *
@@ -69,6 +78,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_aut_' . $this->config->get_inifile_hash() . $agency . $param->autService->_value . $param->materialType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -256,6 +266,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $cache_key = 'OA_bcl' . $this->config->get_inifile_hash() . $param->serviceRequester->_value . $param->borrowerCheckAllowed->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -335,6 +346,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $cache_key = 'OA_enc_' . $this->config->get_inifile_hash() . $param->email->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -402,6 +414,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $mat_type = mb_strtolower($param->orderMaterialType->_value);
       $cache_key = 'OA_endUOP_' . $this->config->get_inifile_hash() . $agency . $param->orderMaterialType->_value . $param->ownedByAgency->_value;
@@ -493,6 +506,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 551))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $trusted_ip = self::trusted_culr_ip($param->authentication->_value, $param->requesterIp->_value);
       $cache_key = 'OA_getCP' . $this->config->get_inifile_hash() . $agency;
@@ -564,6 +578,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_getRI' .
                    $this->config->get_inifile_hash() .
@@ -743,6 +758,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_getSLI' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -826,6 +842,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_opeSC_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -961,7 +978,6 @@ class openAgency extends webServiceServer {
    * or error
    */
   public function service($param) {
-    VerboseJson::log(STAT, 'ja7 debug 1');
     $this->watch->start('aaa');
     if (!$this->aaa->has_right('netpunkt.dk', 500)) {
       $this->watch->stop('aaa');
@@ -969,6 +985,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_ser_' . $this->config->get_inifile_hash() . $agency . $param->service->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -1707,6 +1724,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+        $this->logResponseType($param);
         if (!empty($param->geolocation) && $geoloc = $param->geolocation->_value) {
             $latitude = (!empty($param->latitude)) ? $geoloc->latitude->_value : NULL;
             $longitude = (!empty($param->longitude)) ? $geoloc->longitude->_value : NULL;
@@ -1991,6 +2009,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       $cache_key = 'OA_libRu_' . $this->config->get_inifile_hash() . $param->agencyId->_value . md5(json_encode($param->libraryRule));
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -2104,6 +2123,7 @@ class openAgency extends webServiceServer {
       //print_r($this->aaa->rights);
       _Object::set_value($res, 'error', 'authentication_error');
     } else {
+      $this->logResponseType($param);
       $cache_key = 'OA_libTL_' . $this->config->get_inifile_hash() . $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -2165,6 +2185,7 @@ class openAgency extends webServiceServer {
       _Object::set_value($res, 'error', 'authentication_error');
     else {
       //var_dump($this->aaa->get_rights()); die();
+      $this->logResponseType($param);
       $cache_key = 'OA_namL_' . $this->config->get_inifile_hash() . $param->libraryType->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
       if ($ret = $this->cache->get($cache_key)) {
@@ -2272,6 +2293,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       foreach (array('agencyId', 'agencyName', 'agencyAddress', 'postalCode', 'city', 'anyField') as $par) {
         if (is_array($param->$par)) {
           foreach ($param->$par as $p) {
@@ -2588,6 +2610,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+        $this->logResponseType($param);
         $agency = self::strip_agency($param->agencyId->_value);
         $cache_key = 'OA_BT' . $this->config->get_inifile_hash() . $agency;
         self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -2644,6 +2667,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_IpL' . $this->config->get_inifile_hash() . $agency . $param->domain->_value;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -2729,6 +2753,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       $sql_add = NULL;
       $agency = self::strip_agency($param->agencyId->_value);
       if (empty($agency)) {
@@ -2905,6 +2930,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 550))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_remA_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -3003,6 +3029,7 @@ class openAgency extends webServiceServer {
     if (!$this->aaa->has_right('netpunkt.dk', 500))
       _Object::set_value($res, 'error', 'authentication_error');
     else {
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_reqO_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);
@@ -3039,6 +3066,7 @@ class openAgency extends webServiceServer {
     } else {
       $this->watch->stop('aaa');
       $this->watch->start('preamble');
+      $this->logResponseType($param);
       $agency = self::strip_agency($param->agencyId->_value);
       $cache_key = 'OA_shoO_' . $this->config->get_inifile_hash() . $agency;
       self::set_cache_expire($this->cache_expire[__FUNCTION__]);

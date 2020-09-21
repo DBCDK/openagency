@@ -26,7 +26,7 @@ pipeline {
         registry = "https://docker-i.dbc.dk"
         registryCredential = "docker"
 
-        // Used to update vip-openagency yml file in dit-gitops-secrets project
+        // Used to update vip-openagency-php yml file in dit-gitops-secrets project
         GITLAB_PRIVATE_TOKEN = credentials("metascrum-gitlab-api-token")
     }
     triggers {
@@ -200,7 +200,7 @@ pipeline {
             steps {
                 script {
                     dir("deploy") {
-                        sh "set-new-version services/vip-openagency.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
+                        sh "set-new-version services/vip-openagency-php.yml ${env.GITLAB_PRIVATE_TOKEN} metascrum/dit-gitops-secrets ${DOCKER_PUSH_TAG} -b master"
                     }
                 }
             }
